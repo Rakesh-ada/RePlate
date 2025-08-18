@@ -326,7 +326,9 @@ export default function StaffDashboard() {
                   <p className="text-forest font-semibold text-2xl">{activeItems}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Active Items</p>
                 </div>
-                <Utensils className="text-forest w-8 h-8" />
+                <div className="w-12 h-12 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-sm">
+                  <Utensils className="text-forest w-8 h-8" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -338,7 +340,9 @@ export default function StaffDashboard() {
                   <p className="text-blue-600 font-semibold text-2xl">{totalQuantity}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Total Quantity</p>
                 </div>
-                <TrendingUp className="text-blue-600 w-8 h-8" />
+                <div className="w-12 h-12 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-sm">
+                  <TrendingUp className="text-blue-600 w-8 h-8" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -350,7 +354,9 @@ export default function StaffDashboard() {
                   <p className="text-orange-600 font-semibold text-2xl">{avgDiscount.toFixed(0)}%</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Avg Discount</p>
                 </div>
-                <DollarSign className="text-orange-600 w-8 h-8" />
+                <div className="w-12 h-12 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-sm">
+                  <DollarSign className="text-orange-600 w-8 h-8" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -368,7 +374,7 @@ export default function StaffDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5" />
+                  <ShieldCheck className="w-5 h-5 text-forest" />
                   Verify Claim Code
                 </CardTitle>
                 <p className="text-gray-600 dark:text-gray-400">
@@ -452,7 +458,7 @@ export default function StaffDashboard() {
                 className="bg-forest hover:bg-forest-dark text-white"
                 data-testid="button-add-new-item"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 mr-2 text-white" />
                 Add New Item
               </Button>
               

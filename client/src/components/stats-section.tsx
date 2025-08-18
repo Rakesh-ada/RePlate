@@ -62,7 +62,7 @@ export function StatsSection() {
       label: "Active Students",
       period: "This week",
       bgColor: "bg-green-100 dark:bg-green-900",
-      iconColor: "text-green-600 dark:text-green-400",
+      iconColor: "text-forest",
     },
     {
       icon: Store,
@@ -70,7 +70,7 @@ export function StatsSection() {
       label: "Partner Canteens",
       period: "Campus wide",
       bgColor: "bg-blue-100 dark:bg-blue-900",
-      iconColor: "text-blue-600 dark:text-blue-400",
+      iconColor: "text-blue-600",
     },
     {
       icon: DollarSign,
@@ -78,7 +78,7 @@ export function StatsSection() {
       label: "Student Savings",
       period: "Total saved",
       bgColor: "bg-orange-100 dark:bg-orange-900",
-      iconColor: "text-orange-600 dark:text-orange-400",
+      iconColor: "text-orange-600",
     },
   ];
 
@@ -114,7 +114,7 @@ export function StatsSection() {
               
               <CardContent className="relative p-8">
                 <div className="flex items-start justify-between mb-6">
-                  <div className={`w-16 h-16 ${stat.bgColor} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <stat.icon className={`${stat.iconColor} w-8 h-8`} />
                   </div>
                   <div className="text-right">

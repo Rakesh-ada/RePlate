@@ -189,8 +189,8 @@ export default function StudentDashboard() {
               </div>
             ) : filteredItems.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <QrCode className="w-16 h-16 mx-auto" />
+                <div className="w-20 h-20 bg-white dark:bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <QrCode className="w-16 h-16 text-black dark:text-white" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   No meals available
@@ -233,8 +233,8 @@ export default function StudentDashboard() {
               </div>
             ) : myClaims.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <Clock className="w-16 h-16 mx-auto" />
+                <div className="w-20 h-20 bg-white dark:bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Clock className="w-16 h-16 text-black dark:text-white" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   No claims yet
@@ -256,9 +256,9 @@ export default function StudentDashboard() {
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                          <div className="w-16 h-16 bg-white dark:bg-black rounded-lg flex items-center justify-center shadow-sm">
                             {claim.status === "claimed" ? (
-                              <CheckCircle className="w-8 h-8 text-green-600" />
+                              <CheckCircle className="w-8 h-8 text-forest" />
                             ) : claim.status === "expired" ? (
                               <X className="w-8 h-8 text-red-600" />
                             ) : (
@@ -310,7 +310,7 @@ export default function StudentDashboard() {
                               setQrModalOpen(true);
                             }}
                           >
-                            <QrCode className="w-4 h-4 mr-2" />
+                            <QrCode className="w-4 h-4 mr-2 text-forest" />
                             View Claim Code
                           </Button>
                         </div>
