@@ -21,11 +21,8 @@ export function Navbar() {
         <div className="flex justify-between items-center h-20">
           {/* Logo and Brand */}
           <Link href="/" className="group flex items-center space-x-3">
-            <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-forest to-forest-dark rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-forest/25 transition-all duration-300 group-hover:scale-105">
-                <Leaf className="text-white w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-green-500 rounded-full opacity-80 animate-pulse"></div>
+            <div className="w-12 h-12 bg-gradient-to-br from-forest to-forest-dark rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-forest/25 transition-all duration-300 group-hover:scale-105">
+              <Leaf className="text-white w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-forest to-gray-900 dark:from-white dark:via-forest-light dark:to-white bg-clip-text text-transparent">
