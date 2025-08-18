@@ -33,6 +33,10 @@ import {
 
 const formSchema = insertFoodItemSchema.omit({ createdBy: true }).extend({
   availableUntil: z.string().min(1, "Available until time is required"),
+  originalPrice: z.string().min(1, "Original price is required"),
+  discountedPrice: z.string().min(1, "Discounted price is required"),
+  imageUrl: z.string().optional(),
+  canteenLocation: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -77,10 +81,17 @@ export default function StaffDashboard() {
 
   const addItemMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", "/api/food-items", {
+      // Transform the data to match the backend schema
+      const transformedData = {
         ...data,
         availableUntil: new Date(data.availableUntil),
-      });
+        originalPrice: data.originalPrice.toString(),
+        discountedPrice: data.discountedPrice.toString(),
+        imageUrl: data.imageUrl || null,
+        canteenLocation: data.canteenLocation || null,
+      };
+      
+      const response = await apiRequest("POST", "/api/food-items", transformedData);
       if (!response.ok) {
         const errorData = await response.json();
         console.error("API Error:", errorData);
@@ -121,10 +132,17 @@ export default function StaffDashboard() {
   const updateItemMutation = useMutation({
     mutationFn: async (data: FormData & { id: string }) => {
       const { id, ...updateData } = data;
-      const response = await apiRequest("PUT", `/api/food-items/${id}`, {
+      // Transform the data to match the backend schema
+      const transformedData = {
         ...updateData,
         availableUntil: new Date(updateData.availableUntil),
-      });
+        originalPrice: updateData.originalPrice.toString(),
+        discountedPrice: updateData.discountedPrice.toString(),
+        imageUrl: updateData.imageUrl || null,
+        canteenLocation: updateData.canteenLocation || null,
+      };
+      
+      const response = await apiRequest("PUT", `/api/food-items/${id}`, transformedData);
       return response.json();
     },
     onSuccess: () => {
