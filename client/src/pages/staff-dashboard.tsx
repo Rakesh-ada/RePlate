@@ -82,9 +82,8 @@ export default function StaffDashboard() {
       
       const payload = {
         ...data,
-        availableUntil: availableUntil.toISOString(),
+        availableUntil: availableUntil,
       };
-      console.log("Sending payload to API:", payload);
       
       const response = await apiRequest("POST", "/api/food-items", payload);
       if (!response.ok) {
@@ -132,7 +131,7 @@ export default function StaffDashboard() {
       
       const response = await apiRequest("PUT", `/api/food-items/${id}`, {
         ...updateData,
-        availableUntil: availableUntil.toISOString(),
+        availableUntil: availableUntil,
       });
       return response.json();
     },
