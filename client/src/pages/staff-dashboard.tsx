@@ -31,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const formSchema = insertFoodItemSchema.extend({
+const formSchema = insertFoodItemSchema.omit({ createdBy: true }).extend({
   availableUntil: z.string().min(1, "Please select how many hours the item will be available"),
 });
 
@@ -77,20 +77,14 @@ export default function StaffDashboard() {
 
   const addItemMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      console.log("addItemMutation called with:", data);
       const now = new Date();
       const availableUntil = new Date(now.getTime() + (parseInt(data.availableUntil) * 60 * 60 * 1000));
       
-      const payload = {
+      const response = await apiRequest("POST", "/api/food-items", {
         ...data,
         availableUntil: availableUntil.toISOString(),
-      };
-      console.log("Sending to API:", payload);
-      
-      const response = await apiRequest("POST", "/api/food-items", payload);
-      const result = await response.json();
-      console.log("API response:", result);
-      return result;
+      });
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -248,12 +242,9 @@ export default function StaffDashboard() {
   });
 
   const onSubmit = (data: FormData) => {
-    console.log("Form submitted with data:", data);
     if (editingItem) {
-      console.log("Updating item:", editingItem.id);
       updateItemMutation.mutate({ ...data, id: editingItem.id });
     } else {
-      console.log("Adding new item");
       addItemMutation.mutate(data);
     }
   };
@@ -665,6 +656,7 @@ export default function StaffDashboard() {
                         className="bg-forest hover:bg-forest-dark text-white"
                         disabled={addItemMutation.isPending || updateItemMutation.isPending}
                         data-testid="button-submit-item"
+
                       >
                         {addItemMutation.isPending || updateItemMutation.isPending 
                           ? "Saving..." 
