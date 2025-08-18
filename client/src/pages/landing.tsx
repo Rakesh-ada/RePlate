@@ -158,10 +158,7 @@ export default function Landing() {
               }
             ].map((step, index) => (
               <div key={index} className="group relative">
-                {/* Connection line for desktop */}
-                {index < 2 && (
-                  <div className="hidden md:block absolute top-20 left-full w-16 lg:w-24 h-0.5 bg-gradient-to-r from-forest/30 to-forest/10 transform translate-x-4 lg:translate-x-8"></div>
-                )}
+                
                 
                 <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl p-8 lg:p-10 shadow-xl border border-gray-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group">
                   {/* Hover gradient background */}
