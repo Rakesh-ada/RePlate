@@ -77,14 +77,20 @@ export default function StaffDashboard() {
 
   const addItemMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      console.log("addItemMutation called with:", data);
       const now = new Date();
       const availableUntil = new Date(now.getTime() + (parseInt(data.availableUntil) * 60 * 60 * 1000));
       
-      const response = await apiRequest("POST", "/api/food-items", {
+      const payload = {
         ...data,
         availableUntil: availableUntil.toISOString(),
-      });
-      return response.json();
+      };
+      console.log("Sending to API:", payload);
+      
+      const response = await apiRequest("POST", "/api/food-items", payload);
+      const result = await response.json();
+      console.log("API response:", result);
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -242,9 +248,12 @@ export default function StaffDashboard() {
   });
 
   const onSubmit = (data: FormData) => {
+    console.log("Form submitted with data:", data);
     if (editingItem) {
+      console.log("Updating item:", editingItem.id);
       updateItemMutation.mutate({ ...data, id: editingItem.id });
     } else {
+      console.log("Adding new item");
       addItemMutation.mutate(data);
     }
   };
