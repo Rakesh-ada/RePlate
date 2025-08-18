@@ -6,15 +6,75 @@ import { insertFoodItemSchema, insertFoodClaimSchema } from "@shared/schema";
 import { generateClaimCode } from "@shared/qr-utils";
 import { z } from "zod";
 
+// Extend session interface for demo auth
+declare module 'express-session' {
+  interface SessionData {
+    user?: {
+      claims: { sub: string };
+      access_token: string;
+      expires_at: number;
+    };
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Development authentication bypass for demo purposes
+  app.get('/api/demo-login/:role', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const { role } = req.params;
+      
+      if (role !== 'student' && role !== 'staff') {
+        return res.status(400).json({ message: "Invalid role. Use 'student' or 'staff'" });
+      }
+
+      // Create demo user
+      const demoUser = await storage.upsertUser({
+        id: `demo-${role}-${Date.now()}`,
+        email: `${role}@demo.edu`,
+        firstName: role === 'staff' ? 'Staff' : 'Student',
+        lastName: 'Demo',
+        role: role,
+        studentId: role === 'student' ? 'STU001' : undefined,
+        phoneNumber: '+1234567890',
+      });
+
+      // Create demo session
+      req.session.user = {
+        claims: { sub: demoUser.id },
+        access_token: 'demo-token',
+        expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour
+      };
+
+      res.json({ success: true, user: demoUser });
+    } catch (error) {
+      console.error("Error creating demo user:", error);
+      res.status(500).json({ message: "Failed to create demo user" });
+    }
+  });
+
+  // Auth routes
+  app.get('/api/auth/user', async (req: any, res) => {
+    try {
+      let user = null;
+      
+      // Check for demo session first
+      if (req.session.user) {
+        const userId = req.session.user.claims.sub;
+        user = await storage.getUser(userId);
+      }
+      // Then check for Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        const userId = req.user.claims.sub;
+        user = await storage.getUser(userId);
+      }
+      
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -33,9 +93,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/food-items/my', isAuthenticated, async (req: any, res) => {
+  app.get('/api/food-items/my', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const items = await storage.getFoodItemsByCreator(userId);
       res.json(items);
     } catch (error) {
@@ -44,9 +118,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/food-items', isAuthenticated, async (req: any, res) => {
+  app.post('/api/food-items', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const user = await storage.getUser(userId);
       
       if (!user || user.role !== 'staff') {
@@ -68,9 +156,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/food-items/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/food-items/:id', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const user = await storage.getUser(userId);
       
       if (!user || user.role !== 'staff') {
