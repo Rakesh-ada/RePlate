@@ -9,54 +9,103 @@ export default function Landing() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="bg-white dark:bg-gray-900 py-16 lg:py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="mb-6">
-            <span className="inline-block px-4 py-2 bg-forest/10 text-forest dark:bg-forest/20 dark:text-forest-light text-sm font-medium rounded-full">
-              Student Food Claiming System
-            </span>
-          </div>
-          
-          <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-            Claim Your <br />
-            <span className="text-forest">Campus Meals</span>
-          </h1>
-          
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Access available campus meals through our digital claiming system. Show your 
-            QR code to claim your reserved food items from participating canteens.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              className="bg-forest hover:bg-forest-dark text-white px-8 py-3"
-              onClick={async () => {
-                // Seed demo data first
-                await fetch('/api/seed-demo-data', { method: 'POST' });
-                // Then login as student
-                const response = await fetch('/api/demo-login/student');
-                if (response.ok) {
-                  window.location.reload();
-                }
-              }}
-            >
-              Student Demo Login
-            </Button>
-            <Button 
-              variant="outline"
-              className="border-gray-300 text-gray-700 hover:border-forest hover:text-forest dark:border-gray-600 dark:text-gray-300 dark:hover:border-forest dark:hover:text-forest px-8 py-3"
-              onClick={async () => {
-                // Seed demo data first
-                await fetch('/api/seed-demo-data', { method: 'POST' });
-                // Then login as staff
-                const response = await fetch('/api/demo-login/staff');
-                if (response.ok) {
-                  window.location.reload();
-                }
-              }}
-            >
-              Staff Demo Login
-            </Button>
+      <section className="relative min-h-[90vh] bg-gradient-to-br from-white via-forest/3 to-forest/8 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 overflow-hidden flex items-center">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 opacity-60">
+          <div className="absolute top-20 left-20 w-64 h-64 bg-forest/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-32 right-32 w-96 h-96 bg-forest/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-forest/5 via-transparent to-forest/10 rounded-full blur-3xl"></div>
+        </div>
+
+        {/* Floating elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 right-1/4 w-3 h-3 bg-forest rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '3s' }}></div>
+          <div className="absolute top-3/4 left-1/4 w-2 h-2 bg-forest/60 rounded-full animate-bounce" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
+          <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-forest/40 rounded-full animate-bounce" style={{ animationDelay: '2s', animationDuration: '5s' }}></div>
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+          <div className="max-w-4xl mx-auto">
+            {/* Badge */}
+            <div className="mb-8 animate-fade-in">
+              <span className="inline-flex items-center px-6 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-forest dark:text-forest-light text-sm font-semibold rounded-full shadow-lg border border-forest/20 dark:border-forest-light/20">
+                <span className="w-2 h-2 bg-forest rounded-full mr-3 animate-pulse"></span>
+                Student Food Claiming System
+                <span className="w-2 h-2 bg-forest rounded-full ml-3 animate-pulse"></span>
+              </span>
+            </div>
+            
+            {/* Main heading */}
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <span className="bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent leading-tight">
+                Claim Your
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-forest via-forest-dark to-forest bg-clip-text text-transparent">
+                Campus Meals
+              </span>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              Transform campus dining with our innovative digital platform. 
+              <span className="font-semibold text-forest dark:text-forest-light"> Reduce waste, save money, </span>
+              and enjoy fresh meals with just a QR code.
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+              <Button 
+                className="group relative bg-gradient-to-r from-forest to-forest-dark hover:from-forest-dark hover:to-forest text-white px-10 py-4 text-lg font-semibold rounded-2xl shadow-2xl hover:shadow-forest/25 transition-all duration-300 hover:scale-105 border-0"
+                onClick={async () => {
+                  await fetch('/api/seed-demo-data', { method: 'POST' });
+                  const response = await fetch('/api/demo-login/student');
+                  if (response.ok) {
+                    window.location.reload();
+                  }
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative flex items-center">
+                  <span className="mr-2">🎓</span>
+                  Student Demo Login
+                  <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
+                </span>
+              </Button>
+              
+              <Button 
+                className="group relative bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm border-2 border-forest/30 hover:border-forest text-forest dark:text-forest-light hover:bg-forest/5 dark:hover:bg-forest/10 px-10 py-4 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                onClick={async () => {
+                  await fetch('/api/seed-demo-data', { method: 'POST' });
+                  const response = await fetch('/api/demo-login/staff');
+                  if (response.ok) {
+                    window.location.reload();
+                  }
+                }}
+              >
+                <span className="relative flex items-center">
+                  <span className="mr-2">👨‍🍳</span>
+                  Staff Demo Login
+                  <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
+                </span>
+              </Button>
+            </div>
+
+            {/* Feature highlights */}
+            <div className="mt-16 flex flex-wrap justify-center items-center gap-8 text-gray-600 dark:text-gray-400 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-forest rounded-full"></div>
+                <span className="text-sm font-medium">Real-time Availability</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-forest rounded-full"></div>
+                <span className="text-sm font-medium">QR Code Security</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-forest rounded-full"></div>
+                <span className="text-sm font-medium">Instant Notifications</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
