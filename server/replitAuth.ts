@@ -128,6 +128,18 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // Check for demo session first (for development/demo purposes)
+  if (req.session?.user) {
+    const sessionUser = req.session.user;
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Check if demo session is still valid
+    if (sessionUser.expires_at && now <= sessionUser.expires_at) {
+      return next();
+    }
+  }
+
+  // Fallback to regular OAuth authentication
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
