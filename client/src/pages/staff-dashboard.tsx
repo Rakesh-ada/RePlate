@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const formSchema = insertFoodItemSchema.omit({ createdBy: true }).extend({
-  availableUntil: z.string().min(1, "Please select how many hours the item will be available"),
+  availableUntil: z.string().min(1, "Available until time is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -70,22 +70,17 @@ export default function StaffDashboard() {
       originalPrice: "",
       discountedPrice: "",
       imageUrl: "",
-      availableUntil: "2", // Default to 2 hours
+      availableUntil: "",
       isActive: true,
     },
   });
 
   const addItemMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const now = new Date();
-      const availableUntil = new Date(now.getTime() + (parseInt(data.availableUntil) * 60 * 60 * 1000));
-      
-      const payload = {
+      const response = await apiRequest("POST", "/api/food-items", {
         ...data,
-        availableUntil: availableUntil,
-      };
-      
-      const response = await apiRequest("POST", "/api/food-items", payload);
+        availableUntil: new Date(data.availableUntil),
+      });
       if (!response.ok) {
         const errorData = await response.json();
         console.error("API Error:", errorData);
@@ -126,12 +121,9 @@ export default function StaffDashboard() {
   const updateItemMutation = useMutation({
     mutationFn: async (data: FormData & { id: string }) => {
       const { id, ...updateData } = data;
-      const now = new Date();
-      const availableUntil = new Date(now.getTime() + (parseInt(updateData.availableUntil) * 60 * 60 * 1000));
-      
       const response = await apiRequest("PUT", `/api/food-items/${id}`, {
         ...updateData,
-        availableUntil: availableUntil,
+        availableUntil: new Date(updateData.availableUntil),
       });
       return response.json();
     },
@@ -258,10 +250,10 @@ export default function StaffDashboard() {
 
   const handleEdit = (item: FoodItem) => {
     setEditingItem(item);
-    // Calculate hours remaining from current time to availableUntil
-    const now = new Date();
     const availableUntil = new Date(item.availableUntil);
-    const hoursRemaining = Math.max(1, Math.ceil((availableUntil.getTime() - now.getTime()) / (1000 * 60 * 60)));
+    const localDateTime = new Date(availableUntil.getTime() - availableUntil.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
     
     form.reset({
       name: item.name,
@@ -272,7 +264,7 @@ export default function StaffDashboard() {
       originalPrice: item.originalPrice,
       discountedPrice: item.discountedPrice,
       imageUrl: item.imageUrl || "",
-      availableUntil: hoursRemaining.toString(),
+      availableUntil: localDateTime,
       isActive: item.isActive,
     });
     setAddItemModalOpen(true);
@@ -592,25 +584,14 @@ export default function StaffDashboard() {
                         name="availableUntil"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Available For (Hours)</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-available-hours">
-                                  <SelectValue placeholder="Select hours" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="1">1 hour</SelectItem>
-                                <SelectItem value="2">2 hours</SelectItem>
-                                <SelectItem value="3">3 hours</SelectItem>
-                                <SelectItem value="4">4 hours</SelectItem>
-                                <SelectItem value="5">5 hours</SelectItem>
-                                <SelectItem value="6">6 hours</SelectItem>
-                                <SelectItem value="8">8 hours</SelectItem>
-                                <SelectItem value="12">12 hours</SelectItem>
-                                <SelectItem value="24">24 hours</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormLabel>Available Until</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="datetime-local" 
+                                {...field}
+                                data-testid="input-available-until"
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
