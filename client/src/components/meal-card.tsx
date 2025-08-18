@@ -27,8 +27,8 @@ export function MealCard({ meal, onClaim, isLoading = false }: MealCardProps) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-16 h-16 bg-white dark:bg-black rounded-2xl flex items-center justify-center shadow-sm">
-            <Utensils className="w-12 h-12 text-black dark:text-white" />
+          <div className="text-gray-400 dark:text-gray-600">
+            <Utensils className="w-12 h-12" />
           </div>
         )}
       </div>
@@ -51,7 +51,7 @@ export function MealCard({ meal, onClaim, isLoading = false }: MealCardProps) {
         </p>
 
         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
-          <MapPin className="w-4 h-4 mr-1 text-forest" />
+          <MapPin className="w-4 h-4 mr-1" />
           <span>{meal.canteenName}</span>
         </div>
 
@@ -65,13 +65,13 @@ export function MealCard({ meal, onClaim, isLoading = false }: MealCardProps) {
             </span>
           </div>
           <div className="flex items-center text-sm">
-            <Clock className="w-4 h-4 mr-1 text-forest" />
+            <Clock className="w-4 h-4 mr-1" />
             <span className={`font-medium ${
               isExpired 
                 ? "text-red-600" 
                 : timeRemaining.includes("m left") && !timeRemaining.includes("h")
                   ? "text-orange-600"
-                  : "text-forest"
+                  : "text-green-600"
             }`}>
               {timeRemaining}
             </span>

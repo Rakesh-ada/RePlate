@@ -69,8 +69,8 @@ export function ClaimCodeModal({ isOpen, onClose, claim }: ClaimCodeModalProps) 
         <DialogHeader>
           <DialogTitle className="text-center">
             <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-white dark:bg-black rounded-full flex items-center justify-center mb-4 shadow-lg">
-                <CheckCircle className="text-forest w-8 h-8" />
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle className="text-green-600 dark:text-green-400 w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                 Meal Claimed Successfully!
@@ -132,7 +132,7 @@ export function ClaimCodeModal({ isOpen, onClose, claim }: ClaimCodeModalProps) 
               onClick={handleShare}
               className="flex items-center"
             >
-              <Share2 className="w-4 h-4 mr-1 text-forest" />
+              <Share2 className="w-4 h-4 mr-1" />
               Share
             </Button>
             <Button
@@ -141,7 +141,7 @@ export function ClaimCodeModal({ isOpen, onClose, claim }: ClaimCodeModalProps) 
               onClick={handleCopyCode}
               className="flex items-center"
             >
-              <Copy className="w-4 h-4 mr-1 text-forest" />
+              <Copy className="w-4 h-4 mr-1" />
               Copy Code
             </Button>
           </div>

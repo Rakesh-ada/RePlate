@@ -60,13 +60,13 @@ export function Navbar() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button className="w-10 h-10 p-0 bg-white hover:bg-gray-50 dark:bg-black dark:hover:bg-gray-900 rounded-xl transition-all duration-300 hover:scale-105">
-                      <User className="h-5 w-5 text-black dark:text-white" />
+                    <Button className="w-10 h-10 p-0 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-xl transition-all duration-300 hover:scale-105">
+                      <User className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 shadow-xl rounded-xl">
                     <DropdownMenuItem className="hover:bg-gray-100/80 dark:hover:bg-gray-700/80 rounded-lg">
-                      <User className="mr-2 h-4 w-4 text-black dark:text-white" />
+                      <User className="mr-2 h-4 w-4" />
                       Profile
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
@@ -74,7 +74,7 @@ export function Navbar() {
                       onClick={() => window.location.href = "/api/logout"}
                       className="hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg"
                     >
-                      <LogOut className="mr-2 h-4 w-4 text-red-600 dark:text-red-400" />
+                      <LogOut className="mr-2 h-4 w-4" />
                       Logout
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -84,7 +84,7 @@ export function Navbar() {
 
             <Button
               onClick={toggleTheme}
-              className="w-10 h-10 p-0 bg-white hover:bg-gray-50 dark:bg-black dark:hover:bg-gray-900 rounded-xl shadow-lg transition-all duration-300 hover:scale-105"
+              className="w-10 h-10 p-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-105"
             >
               {theme === "light" ? (
                 <Sun className="h-5 w-5 text-yellow-500" />
