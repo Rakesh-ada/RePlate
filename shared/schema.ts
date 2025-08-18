@@ -50,7 +50,7 @@ export const foodItems = pgTable("food_items", {
   originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(),
   discountedPrice: decimal("discounted_price", { precision: 10, scale: 2 }).notNull(),
   imageUrl: text("image_url"),
-  availableUntil: timestamp("available_until").notNull(),
+  availableUntil: timestamp("available_until", { mode: 'string' }).notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),

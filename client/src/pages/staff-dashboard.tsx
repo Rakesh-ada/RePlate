@@ -84,7 +84,7 @@ export default function StaffDashboard() {
       // Transform the data to match the backend schema
       const transformedData = {
         ...data,
-        availableUntil: new Date(data.availableUntil),
+        availableUntil: data.availableUntil, // Keep as string for timestamp mode
         originalPrice: data.originalPrice.toString(),
         discountedPrice: data.discountedPrice.toString(),
         imageUrl: data.imageUrl || null,
@@ -135,7 +135,7 @@ export default function StaffDashboard() {
       // Transform the data to match the backend schema
       const transformedData = {
         ...updateData,
-        availableUntil: new Date(updateData.availableUntil),
+        availableUntil: updateData.availableUntil, // Keep as string for timestamp mode
         originalPrice: updateData.originalPrice.toString(),
         discountedPrice: updateData.discountedPrice.toString(),
         imageUrl: updateData.imageUrl || null,
