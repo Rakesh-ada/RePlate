@@ -38,17 +38,7 @@ export function Navbar() {
           <div className="flex items-center space-x-6">
             {isAuthenticated && user ? (
               <>
-                <div className="hidden sm:flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                      {user.firstName} {user.lastName}
-                    </span>
-                    <span className="px-2 py-1 bg-forest/10 text-forest dark:bg-forest/20 dark:text-forest-light text-xs font-semibold rounded-full capitalize">
-                      {user.role}
-                    </span>
-                  </div>
-                </div>
+                
                 
                 <div className="flex items-center space-x-3">
                   {user.role === "student" && (
