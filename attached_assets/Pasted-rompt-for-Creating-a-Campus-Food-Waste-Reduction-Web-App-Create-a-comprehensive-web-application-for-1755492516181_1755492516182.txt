@@ -1,0 +1,86 @@
+rompt for Creating a Campus Food Waste Reduction Web App
+Create a comprehensive web application for reducing food waste on university campuses with the following features:
+
+Core Functionality
+Dual User System: Student portal for browsing/claiming discounted meals and Staff portal for listing surplus food items
+Real-time Food Listings: Display available food items with original/discounted prices, quantities, and expiration times
+QR Code System: Generate unique QR codes for claimed meals that can be scanned at pickup
+Authentication: Secure user login/signup with profile management
+Technical Stack
+Frontend: Next.js 15 with TypeScript and React 19
+Styling: Tailwind CSS with shadcn/ui components
+Database: Supabase with PostgreSQL
+Authentication: Supabase Auth
+State Management: React hooks and context
+Database Schema
+-- Food items table
+CREATE TABLE food_items (
+  id UUID PRIMARY KEY,
+  name VARCHAR(255),
+  description TEXT,
+  canteen_name VARCHAR(255),
+  canteen_location VARCHAR(255),
+  quantity_available INTEGER,
+  original_price DECIMAL(10,2),
+  discounted_price DECIMAL(10,2),
+  image_url TEXT,
+  available_until TIMESTAMP,
+  is_active BOOLEAN
+);
+-- Food claims table  
+CREATE TABLE food_claims (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id),
+  food_item_id UUID REFERENCES food_items(id),
+  quantity_claimed INTEGER,
+  qr_code TEXT UNIQUE,
+  status VARCHAR(50) CHECK (status IN ('reserved', 'claimed', 'expired', 'cancelled')),
+  expires_at TIMESTAMP
+);
+-- User profiles table
+CREATE TABLE user_profiles (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id),
+  full_name VARCHAR(255),
+  student_id VARCHAR(100),
+  phone_number VARCHAR(20)
+);
+Key Features to Implement
+Student Dashboard
+Browse available food items with filters
+Claim meals and receive QR codes
+View claim history and status
+Display savings and environmental impact
+Staff Dashboard
+Add/edit/delete food items
+Set discounted prices and quantities
+Track claim statistics
+Manage item availability
+QR Code System
+Generate unique codes for each claim
+2-hour expiration window
+Downloadable/shareable QR codes
+Status tracking (reserved/claimed/expired)
+UI Components Needed
+Responsive food item cards
+Modal dialogs for claims/QR codes
+Form components for adding food items
+Toast notifications for actions
+Loading states and error handling
+Mobile-first responsive design
+Environment Setup
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+Core Pages Structure
+/                 - Landing page with stats
+/auth/login       - User authentication
+/auth/sign-up     - User registration  
+/student          - Student dashboard
+/staff            - Staff dashboard
+Additional Features
+Real-time updates when items are claimed
+Automatic quantity updates
+Profile management
+Mobile-responsive design
+Dark/light theme toggle
+Email notifications for claims
