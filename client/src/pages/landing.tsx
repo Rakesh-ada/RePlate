@@ -18,21 +18,14 @@ export default function Landing() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-forest/5 via-transparent to-forest/10 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Floating elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 right-1/4 w-3 h-3 bg-forest rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '3s' }}></div>
-          <div className="absolute top-3/4 left-1/4 w-2 h-2 bg-forest/60 rounded-full animate-bounce" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
-          <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-forest/40 rounded-full animate-bounce" style={{ animationDelay: '2s', animationDuration: '5s' }}></div>
-        </div>
+
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
           <div className="max-w-4xl mx-auto">
             {/* Badge */}
             <div className="mb-8 animate-fade-in">
               <span className="inline-flex items-center px-6 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-forest dark:text-forest-light text-sm font-semibold rounded-full shadow-lg border border-forest/20 dark:border-forest-light/20">
-                <span className="w-2 h-2 bg-forest rounded-full mr-3 animate-pulse"></span>
                 Student Food Claiming System
-                <span className="w-2 h-2 bg-forest rounded-full ml-3 animate-pulse"></span>
               </span>
             </div>
             
@@ -206,9 +199,7 @@ export default function Landing() {
           {/* Bottom CTA section */}
           <div className="text-center mt-20">
             <div className="inline-flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
-              <div className="w-2 h-2 bg-forest rounded-full animate-pulse"></div>
               <span>Ready to start saving meals and money?</span>
-              <div className="w-2 h-2 bg-forest rounded-full animate-pulse"></div>
             </div>
           </div>
         </div>
