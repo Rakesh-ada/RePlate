@@ -30,14 +30,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid role. Use 'student' or 'staff'" });
       }
 
-      // Create demo user
+      // Create or get existing demo user
+      const timestamp = Date.now();
       const demoUser = await storage.upsertUser({
-        id: `demo-${role}-${Date.now()}`,
-        email: `${role}@demo.edu`,
+        id: `demo-${role}-main`,
+        email: `${role}-${timestamp}@demo.edu`, // Use timestamp to avoid duplicates
         firstName: role === 'staff' ? 'Staff' : 'Student',
         lastName: 'Demo',
         role: role,
-        studentId: role === 'student' ? 'STU001' : undefined,
+        studentId: role === 'student' ? `STU${timestamp.toString().slice(-6)}` : undefined,
         phoneNumber: '+1234567890',
       });
 
@@ -52,6 +53,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating demo user:", error);
       res.status(500).json({ message: "Failed to create demo user" });
+    }
+  });
+
+  // Demo data seeding
+  app.post('/api/seed-demo-data', async (req, res) => {
+    try {
+      // Create demo staff user if not exists
+      const staffUser = await storage.upsertUser({
+        id: 'demo-staff-seed',
+        email: `staff-seed-${Date.now()}@demo.edu`,
+        firstName: 'Demo',
+        lastName: 'Staff',
+        role: 'staff',
+        phoneNumber: '+1234567890',
+      });
+
+      // Create some demo food items
+      const now = new Date();
+      const availableUntil = new Date();
+      availableUntil.setHours(availableUntil.getHours() + 6); // Available for 6 hours
+
+      const demoFoodItems = [
+        {
+          name: 'Margherita Pizza',
+          description: 'Fresh mozzarella, basil, and tomato sauce on a crispy crust',
+          canteenName: 'Main Campus Cafeteria',
+          canteenLocation: 'Building A, Ground Floor',
+          quantityAvailable: 3,
+          originalPrice: '12.50',
+          discountedPrice: '8.00',
+          imageUrl: null,
+          availableUntil,
+          isActive: true,
+          createdBy: staffUser.id,
+        },
+        {
+          name: 'Chicken Caesar Salad',
+          description: 'Grilled chicken breast with romaine lettuce, parmesan, and caesar dressing',
+          canteenName: 'Student Union Food Court',
+          canteenLocation: 'Building B, 2nd Floor',
+          quantityAvailable: 5,
+          originalPrice: '9.75',
+          discountedPrice: '6.50',
+          imageUrl: null,
+          availableUntil,
+          isActive: true,
+          createdBy: staffUser.id,
+        },
+        {
+          name: 'Vegetarian Wrap',
+          description: 'Mixed vegetables, hummus, and fresh herbs in a whole wheat wrap',
+          canteenName: 'Green Campus Cafe',
+          canteenLocation: 'Library Building, 1st Floor',
+          quantityAvailable: 4,
+          originalPrice: '8.25',
+          discountedPrice: '5.75',
+          imageUrl: null,
+          availableUntil,
+          isActive: true,
+          createdBy: staffUser.id,
+        }
+      ];
+
+      for (const item of demoFoodItems) {
+        await storage.createFoodItem(item);
+      }
+
+      res.json({ success: true, message: 'Demo data seeded successfully' });
+    } catch (error) {
+      console.error("Error seeding demo data:", error);
+      res.status(500).json({ message: "Failed to seed demo data" });
     }
   });
 
@@ -222,9 +294,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Food claims routes
-  app.post('/api/food-claims', isAuthenticated, async (req: any, res) => {
+  app.post('/api/food-claims', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { foodItemId, quantityClaimed = 1 } = req.body;
 
       // Validate food item exists and has availability
@@ -265,9 +350,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/food-claims/my', isAuthenticated, async (req: any, res) => {
+  app.get('/api/food-claims/my', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const claims = await storage.getFoodClaimsByUser(userId);
       res.json(claims);
     } catch (error) {
@@ -298,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/food-claims/:id/claim', isAuthenticated, async (req: any, res) => {
+  app.put('/api/food-claims/:id/claim', async (req: any, res) => {
     try {
       const { id } = req.params;
       const claim = await storage.getFoodClaimByClaimCode(id); // id is actually claimCode here

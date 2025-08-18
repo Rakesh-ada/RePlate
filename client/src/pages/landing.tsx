@@ -30,16 +30,32 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               className="bg-forest hover:bg-forest-dark text-white px-8 py-3"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={async () => {
+                // Seed demo data first
+                await fetch('/api/seed-demo-data', { method: 'POST' });
+                // Then login as student
+                const response = await fetch('/api/demo-login/student');
+                if (response.ok) {
+                  window.location.reload();
+                }
+              }}
             >
-              View Available Meals
+              Student Demo Login
             </Button>
             <Button 
               variant="outline"
               className="border-gray-300 text-gray-700 hover:border-forest hover:text-forest dark:border-gray-600 dark:text-gray-300 dark:hover:border-forest dark:hover:text-forest px-8 py-3"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={async () => {
+                // Seed demo data first
+                await fetch('/api/seed-demo-data', { method: 'POST' });
+                // Then login as staff
+                const response = await fetch('/api/demo-login/staff');
+                if (response.ok) {
+                  window.location.reload();
+                }
+              }}
             >
-              Staff Login
+              Staff Demo Login
             </Button>
           </div>
         </div>
