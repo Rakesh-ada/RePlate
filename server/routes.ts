@@ -31,14 +31,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create or get existing demo user
-      const timestamp = Date.now();
       const demoUser = await storage.upsertUser({
         id: `demo-${role}-main`,
-        email: `${role}-${timestamp}@demo.edu`, // Use timestamp to avoid duplicates
-        firstName: role === 'staff' ? 'Staff' : 'Student',
-        lastName: 'Demo',
+        email: `${role}-main@demo.edu`,
+        firstName: role === 'staff' ? 'Demo' : 'Student',
+        lastName: role === 'staff' ? 'Staff' : 'Demo',
         role: role,
-        studentId: role === 'student' ? `STU${timestamp.toString().slice(-6)}` : undefined,
+        studentId: role === 'student' ? 'STU123456' : undefined,
         phoneNumber: '+1234567890',
       });
 
@@ -59,10 +58,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Demo data seeding
   app.post('/api/seed-demo-data', async (req, res) => {
     try {
-      // Create demo staff user if not exists
+      // Use the main demo staff user (same as login)
       const staffUser = await storage.upsertUser({
-        id: 'demo-staff-seed',
-        email: `staff-seed-${Date.now()}@demo.edu`,
+        id: 'demo-staff-main',
+        email: `staff-main-${Date.now()}@demo.edu`,
         firstName: 'Demo',
         lastName: 'Staff',
         role: 'staff',
