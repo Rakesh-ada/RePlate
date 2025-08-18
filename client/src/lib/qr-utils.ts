@@ -1,5 +1,5 @@
 // Re-export from shared utilities
-export { generateQRCode } from "@shared/qr-utils";
+export { generateClaimCode } from "@shared/qr-utils";
 
 export function formatTimeRemaining(expiresAt: string): string {
   const now = new Date();

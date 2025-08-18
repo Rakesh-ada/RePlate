@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,39 +6,27 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Download, Share2, Copy } from "lucide-react";
-import { generateQRCodeDataURL, formatTimeRemaining } from "@/lib/qr-utils";
+import { CheckCircle, Share2, Copy } from "lucide-react";
+import { formatTimeRemaining } from "@/lib/qr-utils";
 import { useToast } from "@/hooks/use-toast";
 import type { FoodClaim, FoodItem } from "@shared/schema";
 
-interface QRModalProps {
+interface ClaimCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
   claim: (FoodClaim & { foodItem: FoodItem }) | null;
 }
 
-export function QRModal({ isOpen, onClose, claim }: QRModalProps) {
-  const [qrDataURL, setQrDataURL] = useState<string>("");
+export function ClaimCodeModal({ isOpen, onClose, claim }: ClaimCodeModalProps) {
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (claim?.qrCode) {
-      const dataURL = generateQRCodeDataURL(claim.qrCode);
-      setQrDataURL(dataURL);
-    }
-  }, [claim?.qrCode]);
+  const handleCopyCode = () => {
+    if (!claim?.claimCode) return;
 
-  const handleDownload = () => {
-    if (!qrDataURL || !claim) return;
-
-    const link = document.createElement("a");
-    link.download = `replate-qr-${claim.id}.png`;
-    link.href = qrDataURL;
-    link.click();
-
+    navigator.clipboard.writeText(claim.claimCode);
     toast({
-      title: "QR Code Downloaded",
-      description: "Your QR code has been saved to your device.",
+      title: "Claim Code Copied",
+      description: "Your claim code has been copied to clipboard.",
     });
   };
 
@@ -48,8 +35,7 @@ export function QRModal({ isOpen, onClose, claim }: QRModalProps) {
 
     const shareData = {
       title: "RePlate Campus - Meal Claim",
-      text: `I've claimed a meal: ${claim.foodItem.name}`,
-      url: `${window.location.origin}/claim/${claim.qrCode}`,
+      text: `I've claimed a meal: ${claim.foodItem.name}. Claim code: ${claim.claimCode}`,
     };
 
     if (navigator.share) {
@@ -63,23 +49,13 @@ export function QRModal({ isOpen, onClose, claim }: QRModalProps) {
         // User cancelled sharing
       }
     } else {
-      // Fallback to copy URL
-      navigator.clipboard.writeText(shareData.url);
+      // Fallback to copy text
+      navigator.clipboard.writeText(shareData.text);
       toast({
-        title: "Link Copied",
-        description: "Claim link has been copied to clipboard.",
+        title: "Text Copied",
+        description: "Claim details have been copied to clipboard.",
       });
     }
-  };
-
-  const handleCopyQR = () => {
-    if (!claim?.qrCode) return;
-
-    navigator.clipboard.writeText(claim.qrCode);
-    toast({
-      title: "QR Code Copied",
-      description: "QR code has been copied to clipboard.",
-    });
   };
 
   if (!claim) return null;
@@ -100,30 +76,23 @@ export function QRModal({ isOpen, onClose, claim }: QRModalProps) {
                 Meal Claimed Successfully!
               </h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm font-normal">
-                Show this QR code at the canteen to collect your meal
+                Show this claim code to canteen staff to collect your meal
               </p>
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* QR Code Display */}
+          {/* Claim Code Display */}
           <div className="flex justify-center">
-            <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-              {qrDataURL ? (
-                <img
-                  src={qrDataURL}
-                  alt="QR Code"
-                  className="w-48 h-48"
-                />
-              ) : (
-                <div className="w-48 h-48 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded mx-auto mb-2"></div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Generating QR Code...</p>
-                  </div>
-                </div>
-              )}
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your Claim Code</p>
+              <div className="text-3xl font-mono font-bold text-forest dark:text-forest-light tracking-widest">
+                {claim.claimCode}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Give this code to canteen staff
+              </p>
             </div>
           </div>
 
@@ -156,16 +125,7 @@ export function QRModal({ isOpen, onClose, claim }: QRModalProps) {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              className="flex items-center"
-            >
-              <Download className="w-4 h-4 mr-1" />
-              Download
-            </Button>
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -178,21 +138,19 @@ export function QRModal({ isOpen, onClose, claim }: QRModalProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleCopyQR}
+              onClick={handleCopyCode}
               className="flex items-center"
             >
               <Copy className="w-4 h-4 mr-1" />
-              Copy
+              Copy Code
             </Button>
           </div>
 
-          <Button
-            variant="ghost"
-            onClick={onClose}
-            className="w-full"
-          >
-            Close
-          </Button>
+          <div className="text-center">
+            <Button onClick={onClose} className="w-full">
+              Done
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

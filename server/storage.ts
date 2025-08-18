@@ -28,9 +28,9 @@ export interface IStorage {
   getFoodItemsByCreator(creatorId: string): Promise<FoodItem[]>;
 
   // Food claim operations
-  createFoodClaim(claim: InsertFoodClaim & { qrCode: string }): Promise<FoodClaim>;
+  createFoodClaim(claim: InsertFoodClaim & { claimCode: string }): Promise<FoodClaim>;
   getFoodClaimsByUser(userId: string): Promise<FoodClaimWithDetails[]>;
-  getFoodClaimByQrCode(qrCode: string): Promise<FoodClaimWithDetails | undefined>;
+  getFoodClaimByClaimCode(claimCode: string): Promise<FoodClaimWithDetails | undefined>;
   updateFoodClaimStatus(id: string, status: string, claimedAt?: Date): Promise<FoodClaim>;
   getActiveFoodClaims(): Promise<FoodClaimWithDetails[]>;
 
@@ -130,7 +130,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Food claim operations
-  async createFoodClaim(claim: InsertFoodClaim & { qrCode: string }): Promise<FoodClaim> {
+  async createFoodClaim(claim: InsertFoodClaim & { claimCode: string }): Promise<FoodClaim> {
     const [newClaim] = await db.insert(foodClaims).values(claim).returning();
     
     // Update food item quantity
@@ -152,7 +152,7 @@ export class DatabaseStorage implements IStorage {
         userId: foodClaims.userId,
         foodItemId: foodClaims.foodItemId,
         quantityClaimed: foodClaims.quantityClaimed,
-        qrCode: foodClaims.qrCode,
+        claimCode: foodClaims.claimCode,
         status: foodClaims.status,
         expiresAt: foodClaims.expiresAt,
         claimedAt: foodClaims.claimedAt,
@@ -167,14 +167,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(foodClaims.createdAt)) as any;
   }
 
-  async getFoodClaimByQrCode(qrCode: string): Promise<FoodClaimWithDetails | undefined> {
+  async getFoodClaimByClaimCode(claimCode: string): Promise<FoodClaimWithDetails | undefined> {
     const [claim] = await db
       .select({
         id: foodClaims.id,
         userId: foodClaims.userId,
         foodItemId: foodClaims.foodItemId,
         quantityClaimed: foodClaims.quantityClaimed,
-        qrCode: foodClaims.qrCode,
+        claimCode: foodClaims.claimCode,
         status: foodClaims.status,
         expiresAt: foodClaims.expiresAt,
         claimedAt: foodClaims.claimedAt,
@@ -185,7 +185,7 @@ export class DatabaseStorage implements IStorage {
       .from(foodClaims)
       .leftJoin(users, eq(foodClaims.userId, users.id))
       .leftJoin(foodItems, eq(foodClaims.foodItemId, foodItems.id))
-      .where(eq(foodClaims.qrCode, qrCode)) as any;
+      .where(eq(foodClaims.claimCode, claimCode)) as any;
     
     return claim;
   }
@@ -207,7 +207,7 @@ export class DatabaseStorage implements IStorage {
         userId: foodClaims.userId,
         foodItemId: foodClaims.foodItemId,
         quantityClaimed: foodClaims.quantityClaimed,
-        qrCode: foodClaims.qrCode,
+        claimCode: foodClaims.claimCode,
         status: foodClaims.status,
         expiresAt: foodClaims.expiresAt,
         claimedAt: foodClaims.claimedAt,

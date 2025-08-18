@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertFoodItemSchema, insertFoodClaimSchema } from "@shared/schema";
-import { generateQRCode } from "@shared/qr-utils";
+import { generateClaimCode } from "@shared/qr-utils";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -141,8 +141,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Food item is no longer available" });
       }
 
-      // Generate QR code
-      const qrCode = generateQRCode();
+      // Generate claim code
+      const claimCode = generateClaimCode();
       
       // Set expiration (2 hours from now)
       const expiresAt = new Date();
@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         foodItemId,
         quantityClaimed,
-        qrCode,
+        claimCode,
         status: "reserved" as const,
         expiresAt,
       };
@@ -176,10 +176,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/food-claims/qr/:qrCode', async (req, res) => {
+  app.get('/api/food-claims/code/:claimCode', async (req, res) => {
     try {
-      const { qrCode } = req.params;
-      const claim = await storage.getFoodClaimByQrCode(qrCode);
+      const { claimCode } = req.params;
+      const claim = await storage.getFoodClaimByClaimCode(claimCode);
       
       if (!claim) {
         return res.status(404).json({ message: "Claim not found" });
@@ -193,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(claim);
     } catch (error) {
-      console.error("Error fetching claim by QR code:", error);
+      console.error("Error fetching claim by code:", error);
       res.status(500).json({ message: "Failed to fetch claim" });
     }
   });
@@ -201,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/food-claims/:id/claim', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const claim = await storage.getFoodClaimByQrCode(id); // id is actually qrCode here
+      const claim = await storage.getFoodClaimByClaimCode(id); // id is actually claimCode here
       
       if (!claim) {
         return res.status(404).json({ message: "Claim not found" });

@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { MealCard } from "@/components/meal-card";
-import { QRModal } from "@/components/qr-modal";
+import { ClaimCodeModal } from "@/components/claim-code-modal";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,7 +58,7 @@ export default function StudentDashboard() {
     onSuccess: (newClaim) => {
       toast({
         title: "Meal Claimed Successfully!",
-        description: "Your QR code is ready. Show it at the canteen to collect your meal.",
+        description: "Your claim code is ready. Show it to canteen staff to collect your meal.",
       });
       
       // Find the food item details
@@ -309,7 +309,7 @@ export default function StudentDashboard() {
                             }}
                           >
                             <QrCode className="w-4 h-4 mr-2" />
-                            View QR Code
+                            View Claim Code
                           </Button>
                         </div>
                       )}
@@ -322,7 +322,7 @@ export default function StudentDashboard() {
         </Tabs>
       </div>
 
-      <QRModal
+      <ClaimCodeModal
         isOpen={qrModalOpen}
         onClose={() => setQrModalOpen(false)}
         claim={claimedMeal}

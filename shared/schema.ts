@@ -63,7 +63,7 @@ export const foodClaims = pgTable("food_claims", {
   userId: varchar("user_id").notNull().references(() => users.id),
   foodItemId: uuid("food_item_id").notNull().references(() => foodItems.id),
   quantityClaimed: integer("quantity_claimed").notNull().default(1),
-  qrCode: text("qr_code").unique().notNull(),
+  claimCode: varchar("claim_code", { length: 20 }).unique().notNull(),
   status: varchar("status", { length: 50 }).notNull().default("reserved"), // reserved, claimed, expired, cancelled
   expiresAt: timestamp("expires_at").notNull(),
   claimedAt: timestamp("claimed_at"),
@@ -114,7 +114,7 @@ export const insertFoodItemSchema = createInsertSchema(foodItems).omit({
 
 export const insertFoodClaimSchema = createInsertSchema(foodClaims).omit({
   id: true,
-  qrCode: true,
+  claimCode: true,
   createdAt: true,
 });
 
