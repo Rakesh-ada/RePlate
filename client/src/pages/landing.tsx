@@ -37,8 +37,9 @@ export default function Landing() {
             <Button 
               variant="outline"
               className="border-gray-300 text-gray-700 hover:border-forest hover:text-forest dark:border-gray-600 dark:text-gray-300 dark:hover:border-forest dark:hover:text-forest px-8 py-3"
+              onClick={() => window.location.href = "/api/login"}
             >
-              Learn More
+              Staff Login
             </Button>
           </div>
         </div>

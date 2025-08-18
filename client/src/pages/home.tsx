@@ -1,9 +1,22 @@
+import React from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 
 export default function Home() {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
+
+  React.useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        setLocation("/");
+      } else if (user.role === "staff") {
+        setLocation("/staff");
+      } else {
+        setLocation("/student");
+      }
+    }
+  }, [user, isLoading, setLocation]);
 
   if (isLoading) {
     return (
@@ -16,17 +29,5 @@ export default function Home() {
     );
   }
 
-  if (!user) {
-    setLocation("/");
-    return null;
-  }
-
-  // Redirect based on user role
-  if (user.role === "staff") {
-    setLocation("/staff");
-    return null;
-  } else {
-    setLocation("/student");
-    return null;
-  }
+  return null;
 }
