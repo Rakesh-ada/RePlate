@@ -134,12 +134,12 @@ export default function StudentDashboard() {
         </div>
 
         <Tabs defaultValue="browse" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="browse">Browse Meals</TabsTrigger>
-            <TabsTrigger value="claims">My Claims</TabsTrigger>
-          </TabsList>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <TabsList className="grid grid-cols-2 max-w-md">
+              <TabsTrigger value="browse">Browse Meals</TabsTrigger>
+              <TabsTrigger value="claims">My Claims</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="browse" className="space-y-6">
             {/* Filters */}
             <div className="flex flex-wrap gap-4">
               <Select value={filters.canteen} onValueChange={(value) => setFilters(prev => ({ ...prev, canteen: value }))}>
@@ -169,7 +169,9 @@ export default function StudentDashboard() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
+          <TabsContent value="browse" className="space-y-6">
             {/* Meal Cards Grid */}
             {itemsLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
