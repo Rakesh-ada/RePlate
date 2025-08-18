@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
-import { Utensils, Users, Store, DollarSign } from "lucide-react";
+import { Utensils } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface CampusStats {
@@ -57,28 +57,28 @@ export function StatsSection() {
       iconColor: "text-forest",
     },
     {
-      icon: Users,
+      icon: Utensils,
       value: stats?.activeStudents || 0,
       label: "Active Students",
       period: "This week",
-      bgColor: "bg-green-100 dark:bg-green-900",
-      iconColor: "text-green-600 dark:text-green-400",
+      bgColor: "bg-forest/10",
+      iconColor: "text-forest",
     },
     {
-      icon: Store,
+      icon: Utensils,
       value: stats?.partnerCanteens || 0,
       label: "Partner Canteens",
       period: "Campus wide",
-      bgColor: "bg-blue-100 dark:bg-blue-900",
-      iconColor: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-forest/10",
+      iconColor: "text-forest",
     },
     {
-      icon: DollarSign,
+      icon: Utensils,
       value: `${Math.round(stats?.totalSavings || 0).toLocaleString()}`,
       label: "Student Savings",
       period: "Total saved",
-      bgColor: "bg-orange-100 dark:bg-orange-900",
-      iconColor: "text-orange-600 dark:text-orange-400",
+      bgColor: "bg-forest/10",
+      iconColor: "text-forest",
     },
   ];
 
