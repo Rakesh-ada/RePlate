@@ -777,7 +777,7 @@ export default function StaffDashboard() {
                           </span>
                         </TableCell>
                         <TableCell className="text-gray-600 dark:text-gray-400">
-                          {new Date(item.availableUntil).toISOString()}
+                          {formatTimeRemaining(item.availableUntil.toString())}
                         </TableCell>
                         <TableCell>
                           <Badge variant={item.isActive ? "default" : "secondary"}>
