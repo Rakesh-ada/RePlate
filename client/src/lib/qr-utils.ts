@@ -1,9 +1,5 @@
-export function generateQRCode(): string {
-  // Generate a unique QR code string
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 15);
-  return `REPLATE_${timestamp}_${random}`;
-}
+// Re-export from shared utilities
+export { generateQRCode } from "@shared/qr-utils";
 
 export function formatTimeRemaining(expiresAt: string): string {
   const now = new Date();

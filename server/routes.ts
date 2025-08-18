@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertFoodItemSchema, insertFoodClaimSchema } from "@shared/schema";
-import { generateQRCode } from "../client/src/lib/qr-utils";
+import { generateQRCode } from "@shared/qr-utils";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
