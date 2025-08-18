@@ -137,24 +137,24 @@ export default function Landing() {
                 title: "Browse Available Meals",
                 description: "Discover discounted meals from campus canteens with real-time availability updates and detailed nutritional information for smart dining choices.",
                 icon: Search,
-                bgColor: "bg-blue-100 dark:bg-blue-900/30",
-                iconColor: "text-blue-600 dark:text-blue-400"
+                bgColor: "bg-forest/10",
+                iconColor: "text-forest"
               },
               {
                 number: "02", 
                 title: "Claim Your Meal",
                 description: "Reserve your meal instantly and receive a unique QR code with a secure 2-hour pickup window for maximum freshness and convenience.",
                 icon: QrCode,
-                bgColor: "bg-green-100 dark:bg-green-900/30",
-                iconColor: "text-green-600 dark:text-green-400"
+                bgColor: "bg-forest/10",
+                iconColor: "text-forest"
               },
               {
                 number: "03",
                 title: "Show & Collect", 
                 description: "Present your QR code at the canteen to collect your discounted meal and contribute to campus sustainability and waste reduction.",
                 icon: CheckCircle,
-                bgColor: "bg-purple-100 dark:bg-purple-900/30",
-                iconColor: "text-purple-600 dark:text-purple-400"
+                bgColor: "bg-forest/10",
+                iconColor: "text-forest"
               }
             ].map((step, index) => (
               <div key={index} className="group relative">
