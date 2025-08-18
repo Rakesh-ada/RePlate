@@ -80,10 +80,18 @@ export default function StaffDashboard() {
       const now = new Date();
       const availableUntil = new Date(now.getTime() + (parseInt(data.availableUntil) * 60 * 60 * 1000));
       
-      const response = await apiRequest("POST", "/api/food-items", {
+      const payload = {
         ...data,
         availableUntil: availableUntil.toISOString(),
-      });
+      };
+      console.log("Sending payload to API:", payload);
+      
+      const response = await apiRequest("POST", "/api/food-items", payload);
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("API Error:", errorData);
+        throw new Error(errorData.message || "Failed to create food item");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -458,12 +466,12 @@ export default function StaffDashboard() {
               </Button>
               
               <Dialog open={addItemModalOpen} onOpenChange={handleModalClose}>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="dialog-description">
                 <DialogHeader>
                   <DialogTitle>
                     {editingItem ? "Edit Food Item" : "Add New Food Item"}
                   </DialogTitle>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p id="dialog-description" className="text-sm text-gray-600 dark:text-gray-400">
                     {editingItem ? "Update the details for this food item" : "Fill in the details to add a new food item to your canteen"}
                   </p>
                 </DialogHeader>
