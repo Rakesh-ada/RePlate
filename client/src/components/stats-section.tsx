@@ -74,7 +74,7 @@ export function StatsSection() {
     },
     {
       icon: DollarSign,
-      value: `$${Math.round(stats?.totalSavings || 0).toLocaleString()}`,
+      value: `${Math.round(stats?.totalSavings || 0).toLocaleString()}`,
       label: "Student Savings",
       period: "Total saved",
       bgColor: "bg-orange-100 dark:bg-orange-900",
@@ -108,9 +108,9 @@ export function StatsSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {statItems.map((stat, index) => (
-            <Card key={index} className="group relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+            <Card key={index} className="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border border-gray-100/50 dark:border-gray-600/30 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
               {/* Animated gradient border */}
-              <div className="absolute inset-0 bg-gradient-to-r from-forest/20 via-transparent to-forest/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-forest/30 via-forest/10 to-forest/30 dark:from-forest/40 dark:via-forest/20 dark:to-forest/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               
               <CardContent className="relative p-8">
                 <div className="flex items-start justify-between mb-6">
@@ -135,7 +135,7 @@ export function StatsSection() {
                 </div>
 
                 {/* Hover effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-forest/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-forest/8 to-forest/3 dark:from-forest/15 dark:to-forest/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
               </CardContent>
             </Card>
           ))}
