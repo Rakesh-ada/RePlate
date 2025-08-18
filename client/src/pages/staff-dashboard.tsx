@@ -444,7 +444,10 @@ export default function StaffDashboard() {
             <div className="flex justify-end">
               <Dialog open={addItemModalOpen} onOpenChange={handleModalClose}>
                 <DialogTrigger asChild>
-                  <Button className="bg-forest hover:bg-forest-dark text-white">
+                  <Button 
+                    className="bg-forest hover:bg-forest-dark text-white"
+                    data-testid="button-add-new-item"
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Item
                   </Button>
@@ -577,7 +580,8 @@ export default function StaffDashboard() {
                             <FormControl>
                               <Input 
                                 type="datetime-local" 
-                                {...field} 
+                                {...field}
+                                data-testid="input-available-until"
                               />
                             </FormControl>
                             <FormMessage />
@@ -631,6 +635,7 @@ export default function StaffDashboard() {
                         type="submit" 
                         className="bg-forest hover:bg-forest-dark text-white"
                         disabled={addItemMutation.isPending || updateItemMutation.isPending}
+                        data-testid="button-submit-item"
                       >
                         {addItemMutation.isPending || updateItemMutation.isPending 
                           ? "Saving..." 
@@ -644,10 +649,8 @@ export default function StaffDashboard() {
                 </Form>
               </DialogContent>
             </Dialog>
-          </div>
-          </TabsContent>
+            </div>
 
-          <TabsContent value="manage" className="space-y-6">
             {/* Food Items Table */}
             <Card>
           <CardHeader>
@@ -681,6 +684,7 @@ export default function StaffDashboard() {
                 <Button 
                   onClick={() => setAddItemModalOpen(true)}
                   className="bg-forest hover:bg-forest-dark text-white"
+                  data-testid="button-add-first-item"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add First Item

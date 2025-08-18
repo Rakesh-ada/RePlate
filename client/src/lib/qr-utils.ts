@@ -10,13 +10,12 @@ export function formatTimeRemaining(expiresAt: string): string {
     return "Expired";
   }
 
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m left`;
+  const hours = Math.ceil(diff / (1000 * 60 * 60)); // Use ceil to round up to next hour
+  
+  if (hours === 1) {
+    return "1 hour left";
   } else {
-    return `${minutes}m left`;
+    return `${hours} hours left`;
   }
 }
 
