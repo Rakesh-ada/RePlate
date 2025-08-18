@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const formSchema = insertFoodItemSchema.extend({
-  availableUntil: z.string().min(1, "Availability end time is required"),
+  availableUntil: z.string().min(1, "Please select how many hours the item will be available"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -70,16 +70,19 @@ export default function StaffDashboard() {
       originalPrice: "",
       discountedPrice: "",
       imageUrl: "",
-      availableUntil: "",
+      availableUntil: "2", // Default to 2 hours
       isActive: true,
     },
   });
 
   const addItemMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      const now = new Date();
+      const availableUntil = new Date(now.getTime() + (parseInt(data.availableUntil) * 60 * 60 * 1000));
+      
       const response = await apiRequest("POST", "/api/food-items", {
         ...data,
-        availableUntil: new Date(data.availableUntil).toISOString(),
+        availableUntil: availableUntil.toISOString(),
       });
       return response.json();
     },
@@ -116,9 +119,12 @@ export default function StaffDashboard() {
   const updateItemMutation = useMutation({
     mutationFn: async (data: FormData & { id: string }) => {
       const { id, ...updateData } = data;
+      const now = new Date();
+      const availableUntil = new Date(now.getTime() + (parseInt(updateData.availableUntil) * 60 * 60 * 1000));
+      
       const response = await apiRequest("PUT", `/api/food-items/${id}`, {
         ...updateData,
-        availableUntil: new Date(updateData.availableUntil).toISOString(),
+        availableUntil: availableUntil.toISOString(),
       });
       return response.json();
     },
@@ -245,10 +251,10 @@ export default function StaffDashboard() {
 
   const handleEdit = (item: FoodItem) => {
     setEditingItem(item);
+    // Calculate hours remaining from current time to availableUntil
+    const now = new Date();
     const availableUntil = new Date(item.availableUntil);
-    const localDateTime = new Date(availableUntil.getTime() - availableUntil.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 16);
+    const hoursRemaining = Math.max(1, Math.ceil((availableUntil.getTime() - now.getTime()) / (1000 * 60 * 60)));
     
     form.reset({
       name: item.name,
@@ -259,7 +265,7 @@ export default function StaffDashboard() {
       originalPrice: item.originalPrice,
       discountedPrice: item.discountedPrice,
       imageUrl: item.imageUrl || "",
-      availableUntil: localDateTime,
+      availableUntil: hoursRemaining.toString(),
       isActive: item.isActive,
     });
     setAddItemModalOpen(true);
@@ -443,10 +449,7 @@ export default function StaffDashboard() {
             {/* Add Item Button */}
             <div className="flex justify-end">
               <Button 
-                onClick={() => {
-                  console.log("Add Item button clicked");
-                  setAddItemModalOpen(true);
-                }}
+                onClick={() => setAddItemModalOpen(true)}
                 className="bg-forest hover:bg-forest-dark text-white"
                 data-testid="button-add-new-item"
               >
@@ -582,14 +585,25 @@ export default function StaffDashboard() {
                         name="availableUntil"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Available Until</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="datetime-local" 
-                                {...field}
-                                data-testid="input-available-until"
-                              />
-                            </FormControl>
+                            <FormLabel>Available For (Hours)</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-available-hours">
+                                  <SelectValue placeholder="Select hours" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="1">1 hour</SelectItem>
+                                <SelectItem value="2">2 hours</SelectItem>
+                                <SelectItem value="3">3 hours</SelectItem>
+                                <SelectItem value="4">4 hours</SelectItem>
+                                <SelectItem value="5">5 hours</SelectItem>
+                                <SelectItem value="6">6 hours</SelectItem>
+                                <SelectItem value="8">8 hours</SelectItem>
+                                <SelectItem value="12">12 hours</SelectItem>
+                                <SelectItem value="24">24 hours</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -688,10 +702,7 @@ export default function StaffDashboard() {
                   Start by adding your first food item to the system.
                 </p>
                 <Button 
-                  onClick={() => {
-                    console.log("Add First Item button clicked");
-                    setAddItemModalOpen(true);
-                  }}
+                  onClick={() => setAddItemModalOpen(true)}
                   className="bg-forest hover:bg-forest-dark text-white"
                   data-testid="button-add-first-item"
                 >
