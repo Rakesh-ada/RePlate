@@ -83,38 +83,69 @@ export function StatsSection() {
   ];
 
   return (
-    <section className="bg-surface dark:bg-gray-800 py-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+    <section className="relative bg-gradient-to-br from-forest/5 via-white to-forest/10 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 py-20 overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-forest/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-10 right-10 w-48 h-48 bg-forest/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-forest/5 to-transparent rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <div className="inline-block">
+            <span className="inline-block px-4 py-2 bg-forest/10 text-forest dark:bg-forest/20 dark:text-forest-light text-sm font-medium rounded-full mb-4">
+              Live Impact Dashboard
+            </span>
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-forest to-gray-900 dark:from-white dark:via-forest-light dark:to-white bg-clip-text text-transparent mb-6">
             Campus Meal Stats
           </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            See how students are accessing campus meals through RePlate
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Real-time insights into how students are reducing food waste and saving money through RePlate
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {statItems.map((stat, index) => (
-            <Card key={index} className="bg-white dark:bg-gray-900 shadow-sm border border-gray-100 dark:border-gray-800">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                    <stat.icon className={`${stat.iconColor} w-6 h-6`} />
+            <Card key={index} className="group relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+              {/* Animated gradient border */}
+              <div className="absolute inset-0 bg-gradient-to-r from-forest/20 via-transparent to-forest/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <CardContent className="relative p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <div className={`w-16 h-16 ${stat.bgColor} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <stat.icon className={`${stat.iconColor} w-8 h-8`} />
                   </div>
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stat.value}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-forest dark:from-white dark:to-forest-light bg-clip-text text-transparent block">
+                      {stat.value}
+                    </span>
+                    <div className="w-8 h-1 bg-gradient-to-r from-forest to-forest-dark ml-auto mt-2 rounded-full"></div>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {stat.label}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {stat.period}
-                </p>
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-forest dark:group-hover:text-forest-light transition-colors duration-300">
+                    {stat.label}
+                  </h3>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {stat.period}
+                  </p>
+                </div>
+
+                {/* Hover effect overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-forest/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Bottom decorative text */}
+        <div className="text-center mt-16">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+            Updated in real-time • Powered by student participation
+          </p>
         </div>
       </div>
     </section>
