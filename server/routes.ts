@@ -53,15 +53,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only staff can create food items" });
       }
 
+      console.log("Request body:", req.body);
+      console.log("User ID:", userId);
+      
       const validatedData = insertFoodItemSchema.parse({
         ...req.body,
         createdBy: userId,
       });
 
+      console.log("Validated data:", validatedData);
       const item = await storage.createFoodItem(validatedData);
       res.status(201).json(item);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log("Zod validation error:", error.errors);
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error creating food item:", error);
