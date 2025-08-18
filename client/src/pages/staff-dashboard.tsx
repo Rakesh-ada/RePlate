@@ -442,21 +442,27 @@ export default function StaffDashboard() {
           <TabsContent value="manage" className="space-y-6">
             {/* Add Item Button */}
             <div className="flex justify-end">
+              <Button 
+                onClick={() => {
+                  console.log("Add Item button clicked");
+                  setAddItemModalOpen(true);
+                }}
+                className="bg-forest hover:bg-forest-dark text-white"
+                data-testid="button-add-new-item"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Item
+              </Button>
+              
               <Dialog open={addItemModalOpen} onOpenChange={handleModalClose}>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="bg-forest hover:bg-forest-dark text-white"
-                    data-testid="button-add-new-item"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add New Item
-                  </Button>
-                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingItem ? "Edit Food Item" : "Add New Food Item"}
                   </DialogTitle>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {editingItem ? "Update the details for this food item" : "Fill in the details to add a new food item to your canteen"}
+                  </p>
                 </DialogHeader>
                 
                 <Form {...form}>
@@ -682,7 +688,10 @@ export default function StaffDashboard() {
                   Start by adding your first food item to the system.
                 </p>
                 <Button 
-                  onClick={() => setAddItemModalOpen(true)}
+                  onClick={() => {
+                    console.log("Add First Item button clicked");
+                    setAddItemModalOpen(true);
+                  }}
                   className="bg-forest hover:bg-forest-dark text-white"
                   data-testid="button-add-first-item"
                 >
