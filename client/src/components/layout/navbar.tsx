@@ -16,31 +16,47 @@ export function Navbar() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <nav className="relative bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl border-b border-gray-100/50 dark:border-gray-700/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo and Brand */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-forest rounded-full flex items-center justify-center">
-              <Leaf className="text-white w-4 h-4" />
+          <Link href="/" className="group flex items-center space-x-3">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-br from-forest to-forest-dark rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-forest/25 transition-all duration-300 group-hover:scale-105">
+                <Leaf className="text-white w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-green-500 rounded-full opacity-80 animate-pulse"></div>
             </div>
-            <span className="text-xl font-semibold text-gray-900 dark:text-white">
-              RePlate Campus
-            </span>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-forest to-gray-900 dark:from-white dark:via-forest-light dark:to-white bg-clip-text text-transparent">
+                RePlate
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium -mt-1">
+                Campus Dining
+              </span>
+            </div>
           </Link>
 
           {/* User Info and Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
             {isAuthenticated && user ? (
               <>
-                <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                  Welcome, {user.email}
-                </span>
+                <div className="hidden sm:flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                      {user.firstName} {user.lastName}
+                    </span>
+                    <span className="px-2 py-1 bg-forest/10 text-forest dark:bg-forest/20 dark:text-forest-light text-xs font-semibold rounded-full capitalize">
+                      {user.role}
+                    </span>
+                  </div>
+                </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                   {user.role === "student" && (
                     <Link href="/student">
-                      <Button variant="ghost" size="sm">
+                      <Button className="bg-forest/10 hover:bg-forest/20 text-forest dark:bg-forest/20 dark:hover:bg-forest/30 dark:text-forest-light border-forest/20 px-4 py-2 rounded-xl font-medium transition-all duration-300 hover:scale-105">
                         Dashboard
                       </Button>
                     </Link>
@@ -48,7 +64,7 @@ export function Navbar() {
                   
                   {user.role === "staff" && (
                     <Link href="/staff">
-                      <Button variant="ghost" size="sm">
+                      <Button className="bg-forest/10 hover:bg-forest/20 text-forest dark:bg-forest/20 dark:hover:bg-forest/30 dark:text-forest-light border-forest/20 px-4 py-2 rounded-xl font-medium transition-all duration-300 hover:scale-105">
                         Staff Dashboard
                       </Button>
                     </Link>
@@ -57,18 +73,19 @@ export function Navbar() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
-                      <User className="h-4 w-4" />
+                    <Button className="w-10 h-10 p-0 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-xl transition-all duration-300 hover:scale-105">
+                      <User className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 shadow-xl rounded-xl">
+                    <DropdownMenuItem className="hover:bg-gray-100/80 dark:hover:bg-gray-700/80 rounded-lg">
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
                     <DropdownMenuItem 
                       onClick={() => window.location.href = "/api/logout"}
+                      className="hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
@@ -79,15 +96,13 @@ export function Navbar() {
             ) : null}
 
             <Button
-              variant="ghost"
-              size="sm"
               onClick={toggleTheme}
-              className="w-8 h-8 p-0"
+              className="w-10 h-10 p-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-105"
             >
               {theme === "light" ? (
-                <Sun className="h-4 w-4" />
+                <Sun className="h-5 w-5 text-yellow-500" />
               ) : (
-                <Moon className="h-4 w-4" />
+                <Moon className="h-5 w-5 text-blue-400" />
               )}
             </Button>
           </div>
