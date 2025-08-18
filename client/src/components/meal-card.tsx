@@ -12,8 +12,8 @@ interface MealCardProps {
 }
 
 export function MealCard({ meal, onClaim, isLoading = false }: MealCardProps) {
-  const timeRemaining = formatTimeRemaining(meal.availableUntil.toString());
-  const isExpired = timeRemaining === "Expired";
+  const availableUntilISO = new Date(meal.availableUntil).toISOString();
+  const isExpired = new Date(meal.availableUntil) <= new Date();
   const isLowQuantity = meal.quantityAvailable <= 2;
 
   return (
@@ -69,11 +69,9 @@ export function MealCard({ meal, onClaim, isLoading = false }: MealCardProps) {
             <span className={`font-medium ${
               isExpired 
                 ? "text-red-600" 
-                : timeRemaining.includes("m left") && !timeRemaining.includes("h")
-                  ? "text-orange-600"
-                  : "text-green-600"
+                : "text-green-600"
             }`}>
-              {timeRemaining}
+              {isExpired ? "Expired" : availableUntilISO}
             </span>
           </div>
         </div>

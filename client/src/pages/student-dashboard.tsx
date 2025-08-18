@@ -288,7 +288,7 @@ export default function StudentDashboard() {
                           </Badge>
                           {claim.status === "reserved" && (
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                              Expires: {formatTimeRemaining(claim.expiresAt.toString())}
+                              Expires: {new Date(claim.expiresAt).toISOString()}
                             </p>
                           )}
                           {claim.status === "claimed" && claim.claimedAt && (
