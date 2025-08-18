@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { StatsSection } from "@/components/stats-section";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
+import { Search, QrCode, CheckCircle } from "lucide-react";
 
 export default function Landing() {
   return (
@@ -141,20 +142,26 @@ export default function Landing() {
               {
                 number: "01",
                 title: "Browse Available Meals",
-                description: "Discover discounted meals from campus canteens with real-time availability updates and detailed nutritional information.",
-                icon: "🍽️"
+                description: "Discover discounted meals from campus canteens with real-time availability updates and detailed nutritional information for smart dining choices.",
+                icon: Search,
+                bgColor: "bg-blue-100 dark:bg-blue-900/30",
+                iconColor: "text-blue-600 dark:text-blue-400"
               },
               {
                 number: "02", 
                 title: "Claim Your Meal",
-                description: "Reserve your meal instantly and receive a unique QR code with a secure 2-hour pickup window for maximum freshness.",
-                icon: "📱"
+                description: "Reserve your meal instantly and receive a unique QR code with a secure 2-hour pickup window for maximum freshness and convenience.",
+                icon: QrCode,
+                bgColor: "bg-green-100 dark:bg-green-900/30",
+                iconColor: "text-green-600 dark:text-green-400"
               },
               {
                 number: "03",
                 title: "Show & Collect", 
-                description: "Present your QR code at the canteen to collect your discounted meal and contribute to campus sustainability.",
-                icon: "✨"
+                description: "Present your QR code at the canteen to collect your discounted meal and contribute to campus sustainability and waste reduction.",
+                icon: CheckCircle,
+                bgColor: "bg-purple-100 dark:bg-purple-900/30",
+                iconColor: "text-purple-600 dark:text-purple-400"
               }
             ].map((step, index) => (
               <div key={index} className="group relative">
@@ -173,8 +180,8 @@ export default function Landing() {
                       <div className="w-20 h-20 bg-gradient-to-br from-forest to-forest-dark rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <span className="text-white text-2xl font-bold">{step.number}</span>
                       </div>
-                      <div className="text-4xl opacity-70 group-hover:scale-110 transition-transform duration-300">
-                        {step.icon}
+                      <div className={`w-16 h-16 ${step.bgColor} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <step.icon className={`${step.iconColor} w-8 h-8`} />
                       </div>
                     </div>
 
