@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -20,7 +21,7 @@ import { insertFoodItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { FoodItem } from "@shared/schema";
-import { Plus, Utensils, TrendingUp, DollarSign, Edit, Trash2, MoreHorizontal } from "lucide-react";
+import { Plus, Utensils, TrendingUp, DollarSign, Edit, Trash2, MoreHorizontal, ShieldCheck, CheckCircle } from "lucide-react";
 import { formatTimeRemaining } from "@/lib/qr-utils";
 import { z } from "zod";
 import {
@@ -301,24 +302,153 @@ export default function StaffDashboard() {
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
         <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Staff Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                Manage food items and verify claim codes
-              </p>
-            </div>
-            
-            <Dialog open={addItemModalOpen} onOpenChange={handleModalClose}>
-              <DialogTrigger asChild>
-                <Button className="bg-forest hover:bg-forest-dark text-white">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add New Item
-                </Button>
-              </DialogTrigger>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Staff Dashboard
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Manage food items and verify student claims
+          </p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-forest font-semibold text-2xl">{activeItems}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Active Items</p>
+                </div>
+                <Utensils className="text-forest w-8 h-8" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-600 font-semibold text-2xl">{totalQuantity}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Quantity</p>
+                </div>
+                <TrendingUp className="text-blue-600 w-8 h-8" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-600 font-semibold text-2xl">{avgDiscount.toFixed(0)}%</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Avg Discount</p>
+                </div>
+                <DollarSign className="text-orange-600 w-8 h-8" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="verify" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="verify">Verify Claims</TabsTrigger>
+            <TabsTrigger value="manage">Manage Items</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="verify" className="space-y-6">
+            {/* Claim Code Verification */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5" />
+                  Verify Claim Code
+                </CardTitle>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Enter a student's claim code to verify and complete meal collection
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <Input
+                      placeholder="Enter claim code (e.g., ABC-XYZ)"
+                      value={claimCode}
+                      onChange={(e) => setClaimCode(e.target.value.toUpperCase())}
+                      className="flex-1"
+                      maxLength={7}
+                    />
+                    <Button
+                      onClick={() => verifyClaimMutation.mutate(claimCode)}
+                      disabled={!claimCode.trim() || verifyClaimMutation.isPending}
+                      className="bg-forest hover:bg-forest-dark text-white"
+                    >
+                      {verifyClaimMutation.isPending ? "Verifying..." : "Verify"}
+                    </Button>
+                  </div>
+
+                  {verificationResult && (
+                    <div className="mt-4 p-4 border rounded-lg">
+                      {verificationResult.success ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default" className="bg-green-100 text-green-800">
+                              Valid Claim
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <strong>Student:</strong> {verificationResult.claim.user.firstName} {verificationResult.claim.user.lastName}
+                            </div>
+                            <div>
+                              <strong>Email:</strong> {verificationResult.claim.user.email}
+                            </div>
+                            <div>
+                              <strong>Meal:</strong> {verificationResult.claim.foodItem.name}
+                            </div>
+                            <div>
+                              <strong>Canteen:</strong> {verificationResult.claim.foodItem.canteenName}
+                            </div>
+                            <div>
+                              <strong>Price:</strong> ${verificationResult.claim.foodItem.discountedPrice}
+                            </div>
+                            <div>
+                              <strong>Status:</strong> {verificationResult.claim.status}
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => completeClaimMutation.mutate(verificationResult.claim.id)}
+                            disabled={completeClaimMutation.isPending}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            {completeClaimMutation.isPending ? "Processing..." : "Complete Collection"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-red-600">
+                          <Badge variant="destructive">Invalid</Badge>
+                          <p className="mt-2">{verificationResult.message}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="manage" className="space-y-6">
+            {/* Add Item Button */}
+            <div className="flex justify-end">
+              <Dialog open={addItemModalOpen} onOpenChange={handleModalClose}>
+                <DialogTrigger asChild>
+                  <Button className="bg-forest hover:bg-forest-dark text-white">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New Item
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
@@ -515,127 +645,11 @@ export default function StaffDashboard() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
+          </TabsContent>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-forest font-semibold text-2xl">{activeItems}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Active Items</p>
-                </div>
-                <Utensils className="text-forest w-8 h-8" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-600 font-semibold text-2xl">{totalQuantity}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Quantity</p>
-                </div>
-                <TrendingUp className="text-blue-600 w-8 h-8" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-600 font-semibold text-2xl">{avgDiscount.toFixed(0)}%</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Avg Discount</p>
-                </div>
-                <DollarSign className="text-orange-600 w-8 h-8" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Claim Code Verification */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
-              Verify Claim Code
-            </CardTitle>
-            <p className="text-gray-600 dark:text-gray-400">
-              Enter a student's claim code to verify and complete meal collection
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <Input
-                  placeholder="Enter claim code (e.g., ABC-XYZ)"
-                  value={claimCode}
-                  onChange={(e) => setClaimCode(e.target.value.toUpperCase())}
-                  className="flex-1"
-                  maxLength={7}
-                />
-                <Button
-                  onClick={() => verifyClaimMutation.mutate(claimCode)}
-                  disabled={!claimCode.trim() || verifyClaimMutation.isPending}
-                  className="bg-forest hover:bg-forest-dark text-white"
-                >
-                  {verifyClaimMutation.isPending ? "Verifying..." : "Verify"}
-                </Button>
-              </div>
-
-              {verificationResult && (
-                <div className="mt-4 p-4 border rounded-lg">
-                  {verificationResult.success ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="default" className="bg-green-100 text-green-800">
-                          Valid Claim
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <strong>Student:</strong> {verificationResult.claim.user.firstName} {verificationResult.claim.user.lastName}
-                        </div>
-                        <div>
-                          <strong>Email:</strong> {verificationResult.claim.user.email}
-                        </div>
-                        <div>
-                          <strong>Meal:</strong> {verificationResult.claim.foodItem.name}
-                        </div>
-                        <div>
-                          <strong>Canteen:</strong> {verificationResult.claim.foodItem.canteenName}
-                        </div>
-                        <div>
-                          <strong>Price:</strong> ${verificationResult.claim.foodItem.discountedPrice}
-                        </div>
-                        <div>
-                          <strong>Status:</strong> {verificationResult.claim.status}
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => completeClaimMutation.mutate(verificationResult.claim.id)}
-                        disabled={completeClaimMutation.isPending}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        {completeClaimMutation.isPending ? "Processing..." : "Complete Collection"}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="text-red-600">
-                      <Badge variant="destructive">Invalid</Badge>
-                      <p className="mt-2">{verificationResult.message}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Food Items Table */}
-        <Card>
+          <TabsContent value="manage" className="space-y-6">
+            {/* Food Items Table */}
+            <Card>
           <CardHeader>
             <CardTitle>Your Food Items</CardTitle>
           </CardHeader>
@@ -768,6 +782,8 @@ export default function StaffDashboard() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Footer />
