@@ -61,12 +61,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use the main demo staff user (same as login)
       const staffUser = await storage.upsertUser({
         id: 'demo-staff-main',
-        email: `staff-main-${Date.now()}@demo.edu`,
+        email: `staff-main@demo.edu`,
         firstName: 'Demo',
         lastName: 'Staff',
         role: 'staff',
         phoneNumber: '+1234567890',
       });
+
+      // Check if demo data already exists for this user
+      const existingItems = await storage.getFoodItemsByCreator(staffUser.id);
+      if (existingItems.length > 0) {
+        return res.json({ success: true, message: 'Demo data already exists' });
+      }
 
       // Create some demo food items
       const now = new Date();
