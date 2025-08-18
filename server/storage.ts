@@ -33,6 +33,12 @@ export interface IStorage {
   getFoodClaimByClaimCode(claimCode: string): Promise<FoodClaimWithDetails | undefined>;
   updateFoodClaimStatus(id: string, status: string, claimedAt?: Date): Promise<FoodClaim>;
   getActiveFoodClaims(): Promise<FoodClaimWithDetails[]>;
+  
+  // Get claim with full details for verification
+  getClaimByCode(claimCode: string): Promise<FoodClaimWithDetails | undefined>;
+  
+  // Complete a claim (mark as collected)
+  completeClaim(claimId: string): Promise<FoodClaimWithDetails>;
 
   // Stats operations
   getCampusStats(): Promise<{
@@ -269,6 +275,70 @@ export class DatabaseStorage implements IStorage {
       partnerCanteens: partnerCanteens?.count || 0,
       totalSavings: Number(savings?.total || 0),
     };
+  }
+
+  // Get claim with full details for verification (alias for getFoodClaimByClaimCode)
+  async getClaimByCode(claimCode: string): Promise<FoodClaimWithDetails | undefined> {
+    return this.getFoodClaimByClaimCode(claimCode);
+  }
+
+  // Complete a claim (mark as collected)
+  async completeClaim(claimId: string): Promise<FoodClaimWithDetails> {
+    // Update the claim status to 'claimed'
+    await this.updateFoodClaimStatus(claimId, "claimed", new Date());
+    
+    // Return the updated claim with full details
+    const claim = await db
+      .select({
+        id: foodClaims.id,
+        userId: foodClaims.userId,
+        foodItemId: foodClaims.foodItemId,
+        quantityClaimed: foodClaims.quantityClaimed,
+        claimCode: foodClaims.claimCode,
+        status: foodClaims.status,
+        expiresAt: foodClaims.expiresAt,
+        claimedAt: foodClaims.claimedAt,
+        createdAt: foodClaims.createdAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          studentId: users.studentId,
+          phoneNumber: users.phoneNumber,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        },
+        foodItem: {
+          id: foodItems.id,
+          name: foodItems.name,
+          description: foodItems.description,
+          canteenName: foodItems.canteenName,
+          canteenLocation: foodItems.canteenLocation,
+          quantityAvailable: foodItems.quantityAvailable,
+          originalPrice: foodItems.originalPrice,
+          discountedPrice: foodItems.discountedPrice,
+          imageUrl: foodItems.imageUrl,
+          availableUntil: foodItems.availableUntil,
+          isActive: foodItems.isActive,
+          createdBy: foodItems.createdBy,
+          createdAt: foodItems.createdAt,
+          updatedAt: foodItems.updatedAt,
+        },
+      })
+      .from(foodClaims)
+      .leftJoin(users, eq(foodClaims.userId, users.id))
+      .leftJoin(foodItems, eq(foodClaims.foodItemId, foodItems.id))
+      .where(eq(foodClaims.id, claimId))
+      .limit(1);
+
+    if (!claim[0]) {
+      throw new Error("Claim not found after completion");
+    }
+
+    return claim[0] as FoodClaimWithDetails;
   }
 }
 

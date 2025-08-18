@@ -42,6 +42,8 @@ export default function StaffDashboard() {
   const queryClient = useQueryClient();
   const [addItemModalOpen, setAddItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
+  const [claimCode, setClaimCode] = useState("");
+  const [verificationResult, setVerificationResult] = useState<any>(null);
 
   // Redirect if not staff
   if (!authLoading && (!user || user.role !== "staff")) {
@@ -181,6 +183,57 @@ export default function StaffDashboard() {
     },
   });
 
+  const verifyClaimMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const response = await apiRequest("POST", "/api/food-claims/verify", { claimCode: code });
+      return response.json();
+    },
+    onSuccess: (result) => {
+      setVerificationResult(result);
+      if (result.success) {
+        toast({
+          title: "Claim Verified",
+          description: `Meal "${result.claim.foodItem.name}" verified for student.`,
+        });
+      } else {
+        toast({
+          title: "Verification Failed",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Verification Error",
+        description: error.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const completeClaimMutation = useMutation({
+    mutationFn: async (claimId: string) => {
+      const response = await apiRequest("POST", `/api/food-claims/${claimId}/complete`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      setVerificationResult(null);
+      setClaimCode("");
+      toast({
+        title: "Meal Collected",
+        description: "Student has successfully collected their meal.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to complete claim.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: FormData) => {
     if (editingItem) {
       updateItemMutation.mutate({ ...data, id: editingItem.id });
@@ -255,7 +308,7 @@ export default function StaffDashboard() {
                 Staff Dashboard
               </h1>
               <p className="text-gray-600 dark:text-gray-300">
-                Manage food items and track claim statistics
+                Manage food items and verify claim codes
               </p>
             </div>
             
@@ -502,6 +555,84 @@ export default function StaffDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Claim Code Verification */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+              Verify Claim Code
+            </CardTitle>
+            <p className="text-gray-600 dark:text-gray-400">
+              Enter a student's claim code to verify and complete meal collection
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <Input
+                  placeholder="Enter claim code (e.g., ABC-XYZ)"
+                  value={claimCode}
+                  onChange={(e) => setClaimCode(e.target.value.toUpperCase())}
+                  className="flex-1"
+                  maxLength={7}
+                />
+                <Button
+                  onClick={() => verifyClaimMutation.mutate(claimCode)}
+                  disabled={!claimCode.trim() || verifyClaimMutation.isPending}
+                  className="bg-forest hover:bg-forest-dark text-white"
+                >
+                  {verifyClaimMutation.isPending ? "Verifying..." : "Verify"}
+                </Button>
+              </div>
+
+              {verificationResult && (
+                <div className="mt-4 p-4 border rounded-lg">
+                  {verificationResult.success ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="bg-green-100 text-green-800">
+                          Valid Claim
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <strong>Student:</strong> {verificationResult.claim.user.firstName} {verificationResult.claim.user.lastName}
+                        </div>
+                        <div>
+                          <strong>Email:</strong> {verificationResult.claim.user.email}
+                        </div>
+                        <div>
+                          <strong>Meal:</strong> {verificationResult.claim.foodItem.name}
+                        </div>
+                        <div>
+                          <strong>Canteen:</strong> {verificationResult.claim.foodItem.canteenName}
+                        </div>
+                        <div>
+                          <strong>Price:</strong> ${verificationResult.claim.foodItem.discountedPrice}
+                        </div>
+                        <div>
+                          <strong>Status:</strong> {verificationResult.claim.status}
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => completeClaimMutation.mutate(verificationResult.claim.id)}
+                        disabled={completeClaimMutation.isPending}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {completeClaimMutation.isPending ? "Processing..." : "Complete Collection"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-red-600">
+                      <Badge variant="destructive">Invalid</Badge>
+                      <p className="mt-2">{verificationResult.message}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Food Items Table */}
         <Card>

@@ -235,6 +235,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Claim verification endpoints
+  app.post("/api/food-claims/verify", isAuthenticated, async (req: any, res) => {
+    try {
+      const { claimCode } = req.body;
+      if (!claimCode) {
+        return res.status(400).json({ success: false, message: "Claim code is required" });
+      }
+
+      const claim = await storage.getClaimByCode(claimCode);
+      if (!claim) {
+        return res.json({ success: false, message: "Invalid claim code" });
+      }
+
+      if (claim.status !== "reserved") {
+        return res.json({ success: false, message: `Claim is ${claim.status}` });
+      }
+
+      if (new Date() > new Date(claim.expiresAt)) {
+        return res.json({ success: false, message: "Claim has expired" });
+      }
+
+      res.json({ success: true, claim });
+    } catch (error) {
+      console.error("Error verifying claim:", error);
+      res.status(500).json({ success: false, message: "Failed to verify claim" });
+    }
+  });
+
+  app.post("/api/food-claims/:id/complete", isAuthenticated, async (req: any, res) => {
+    try {
+      const claimId = req.params.id;
+      const updatedClaim = await storage.completeClaim(claimId);
+      res.json(updatedClaim);
+    } catch (error) {
+      console.error("Error completing claim:", error);
+      res.status(500).json({ message: "Failed to complete claim" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
