@@ -76,14 +76,7 @@ export function Navbar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
-            ) : (
-              <Button 
-                onClick={() => window.location.href = "/api/login"}
-                className="bg-forest hover:bg-forest-dark text-white"
-              >
-                Sign In
-              </Button>
-            )}
+            ) : null}
 
             <Button
               variant="ghost"
