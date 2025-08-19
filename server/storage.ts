@@ -73,7 +73,7 @@ export class DatabaseStorage implements IStorage {
 
   // Food item operations
   async getAllActiveFoodItems(): Promise<FoodItemWithCreator[]> {
-    const now = new Date();
+    const now = new Date().toISOString();
     return await db
       .select({
         id: foodItems.id,
