@@ -542,12 +542,12 @@ export default function StaffDashboard() {
                         name="originalPrice"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Original Price ($)</FormLabel>
+                            <FormLabel>Original Price (₹)</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
                                 step="0.01" 
-                                placeholder="8.99" 
+                                placeholder="199.00" 
                                 {...field} 
                               />
                             </FormControl>
@@ -561,12 +561,12 @@ export default function StaffDashboard() {
                         name="discountedPrice"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Discounted Price ($)</FormLabel>
+                            <FormLabel>Discounted Price (₹)</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
                                 step="0.01" 
-                                placeholder="4.99" 
+                                placeholder="149.00" 
                                 {...field} 
                               />
                             </FormControl>
@@ -763,10 +763,10 @@ export default function StaffDashboard() {
                         <TableCell>
                           <div className="flex items-center space-x-2">
                             <span className="font-semibold text-forest">
-                              ${Number(item.discountedPrice).toFixed(2)}
+                              ₹{Number(item.discountedPrice).toFixed(2)}
                             </span>
                             <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                              ${Number(item.originalPrice).toFixed(2)}
+                              ₹{Number(item.originalPrice).toFixed(2)}
                             </span>
                           </div>
                         </TableCell>

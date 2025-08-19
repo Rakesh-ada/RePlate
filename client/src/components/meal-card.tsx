@@ -58,10 +58,10 @@ export function MealCard({ meal, onClaim, isLoading = false }: MealCardProps) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold text-forest">
-              ${Number(meal.discountedPrice).toFixed(2)}
+              ₹{Number(meal.discountedPrice).toFixed(2)}
             </span>
             <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-              ${Number(meal.originalPrice).toFixed(2)}
+              ₹{Number(meal.originalPrice).toFixed(2)}
             </span>
           </div>
           <div className="flex items-center text-sm">
