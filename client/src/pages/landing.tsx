@@ -44,7 +44,7 @@ export default function Landing() {
             <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               Transform campus dining with our innovative digital platform. 
               <span className="font-semibold text-forest dark:text-forest-light"> Reduce waste, save money, </span>
-              and enjoy fresh meals with just a QR code.
+              and enjoy fresh meals with just a claim code.
             </p>
             
             {/* CTA Buttons */}
@@ -93,7 +93,7 @@ export default function Landing() {
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-forest rounded-full"></div>
-                <span className="text-sm font-medium">QR Code Security</span>
+                <span className="text-sm font-medium">Claim Code Security</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-forest rounded-full"></div>
@@ -143,7 +143,7 @@ export default function Landing() {
               {
                 number: "02", 
                 title: "Claim Your Meal",
-                description: "Reserve your meal instantly and receive a unique QR code with a secure 2-hour pickup window for maximum freshness and convenience.",
+                description: "Reserve your meal instantly and receive a unique claim code with a secure 2-hour pickup window for maximum freshness and convenience.",
                 icon: QrCode,
                 bgColor: "bg-forest/10",
                 iconColor: "text-forest"
@@ -151,7 +151,7 @@ export default function Landing() {
               {
                 number: "03",
                 title: "Show & Collect", 
-                description: "Present your QR code at the canteen to collect your discounted meal and contribute to campus sustainability and waste reduction.",
+                description: "Present your claim code at the canteen to collect your discounted meal and contribute to campus sustainability and waste reduction.",
                 icon: CheckCircle,
                 bgColor: "bg-forest/10",
                 iconColor: "text-forest"

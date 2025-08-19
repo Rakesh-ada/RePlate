@@ -19,8 +19,8 @@ export function formatTimeRemaining(expiresAt: string): string {
   }
 }
 
-export function generateQRCodeDataURL(qrCode: string): string {
-  // For a real implementation, you would use a QR code library like 'qrcode'
+export function generateClaimCodeDataURL(claimCode: string): string {
+  // For a real implementation, you would use a claim code library like 'qrcode'
   // For now, return a placeholder data URL
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -32,11 +32,11 @@ export function generateQRCodeDataURL(qrCode: string): string {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 200, 200);
     
-    // Draw simple QR-like pattern
+    // Draw simple claim code pattern
     ctx.fillStyle = '#000000';
     for (let i = 0; i < 20; i++) {
       for (let j = 0; j < 20; j++) {
-        if ((i + j + qrCode.length) % 3 === 0) {
+        if ((i + j + claimCode.length) % 3 === 0) {
           ctx.fillRect(i * 10, j * 10, 8, 8);
         }
       }

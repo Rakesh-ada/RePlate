@@ -1,8 +1,8 @@
 # Overview
 
-RePlate Campus is a comprehensive web application designed to reduce food waste on university campuses by connecting students with discounted surplus food items from campus canteens. The platform features a dual-user system where staff can list available food items with discounted pricing and students can browse, claim, and pick up meals using QR codes for verification.
+RePlate Campus is a comprehensive web application designed to reduce food waste on university campuses by connecting students with discounted surplus food items from campus canteens. The platform features a dual-user system where staff can list available food items with discounted pricing and students can browse, claim, and pick up meals using claim codes for verification.
 
-The application implements a modern full-stack architecture with real-time food listings, secure authentication, a comprehensive QR code claiming system, and a food donation management system for NGO partnerships that ensures expired food items are redirected to help those in need.
+The application implements a modern full-stack architecture with real-time food listings, secure authentication, a comprehensive claim code system, and a food donation management system for NGO partnerships that ensures expired food items are redirected to help those in need.
 
 ## Recent Changes
 
@@ -54,17 +54,17 @@ The server follows an Express.js-based REST API pattern with TypeScript:
 - **Role-Based Access**: Dual user roles (student/staff) with different dashboard access and permissions
 - **Middleware Protection**: Route-level authentication middleware protecting API endpoints
 
-## QR Code System
+## Claim Code System
 
-- **Generation**: Custom QR code generation for meal claims with unique identifiers
-- **Verification**: Server-side QR code validation for meal pickup confirmation
+- **Generation**: Custom claim code generation for meal claims with unique identifiers
+- **Verification**: Server-side claim code validation for meal pickup confirmation
 - **Status Tracking**: Comprehensive claim status management (reserved, claimed, expired, cancelled)
 
 ## Key Data Models
 
 - **Users**: Profile management with role differentiation and contact information
 - **Food Items**: Complete meal metadata including pricing, availability, and canteen details
-- **Food Claims**: Relationship tracking between users and claimed meals with QR codes
+- **Food Claims**: Relationship tracking between users and claimed meals with claim codes
 - **Sessions**: Secure session storage for authentication persistence
 
 # External Dependencies

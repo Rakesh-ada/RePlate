@@ -22,7 +22,7 @@ export default function StudentDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
-  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [claimCodeModalOpen, setClaimCodeModalOpen] = useState(false);
   const [claimedMeal, setClaimedMeal] = useState<(FoodClaimWithDetails & { foodItem: any }) | null>(null);
   const [filters, setFilters] = useState({
     canteen: "all",
@@ -64,7 +64,7 @@ export default function StudentDashboard() {
       // Find the food item details
       const foodItem = foodItems.find(item => item.id === newClaim.foodItemId);
       setClaimedMeal({ ...newClaim, foodItem });
-      setQrModalOpen(true);
+      setClaimCodeModalOpen(true);
       
       // Invalidate and refetch data
       queryClient.invalidateQueries({ queryKey: ["/api/food-items"] });
@@ -307,7 +307,7 @@ export default function StudentDashboard() {
                             size="sm"
                             onClick={() => {
                               setClaimedMeal(claim as any);
-                              setQrModalOpen(true);
+                              setClaimCodeModalOpen(true);
                             }}
                           >
                             <QrCode className="w-4 h-4 mr-2" />
@@ -325,8 +325,8 @@ export default function StudentDashboard() {
       </div>
 
       <ClaimCodeModal
-        isOpen={qrModalOpen}
-        onClose={() => setQrModalOpen(false)}
+        isOpen={claimCodeModalOpen}
+        onClose={() => setClaimCodeModalOpen(false)}
         claim={claimedMeal}
       />
 
