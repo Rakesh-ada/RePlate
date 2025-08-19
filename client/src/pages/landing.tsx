@@ -61,7 +61,6 @@ export default function Landing() {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <span className="relative flex items-center">
-                  <span className="mr-2">🎓</span>
                   Student Demo Login
                   <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
@@ -78,7 +77,6 @@ export default function Landing() {
                 }}
               >
                 <span className="relative flex items-center">
-                  <span className="mr-2">👨‍🍳</span>
                   Staff Demo Login
                   <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
@@ -143,7 +141,7 @@ export default function Landing() {
               {
                 number: "02", 
                 title: "Claim Your Meal",
-                description: "Reserve your meal instantly and receive a unique claim code with a secure 2-hour pickup window for maximum freshness and convenience.",
+                description: "Reserve meals instantly with a unique claim code and 2-hour pickup window for guaranteed freshness.",
                 icon: QrCode,
                 bgColor: "bg-forest/10",
                 iconColor: "text-forest"
@@ -151,7 +149,7 @@ export default function Landing() {
               {
                 number: "03",
                 title: "Show & Collect", 
-                description: "Present your claim code at the canteen to collect your discounted meal and contribute to campus sustainability and waste reduction.",
+                description: "Show your claim code at the canteen to collect your discounted meal, helping reduce food waste on campus while enjoying great food at lower prices.",
                 icon: CheckCircle,
                 bgColor: "bg-forest/10",
                 iconColor: "text-forest"

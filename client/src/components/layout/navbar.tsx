@@ -71,8 +71,8 @@ export function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-gray-200/50 dark:bg-gray-700/50" />
                     <DropdownMenuItem 
-                      onClick={() => window.location.href = "/api/logout"}
-                      className="hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg"
+                      onClick={() => fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/')}
+                      className="hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout

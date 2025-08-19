@@ -1,10 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+
 import { insertFoodItemSchema, insertFoodClaimSchema } from "@shared/schema";
 import { generateClaimCode } from "@shared/qr-utils";
 import { z } from "zod";
+import 'express-session';
 
 // Extend session interface for demo auth
 declare module 'express-session' {
@@ -19,7 +20,7 @@ declare module 'express-session' {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
-  await setupAuth(app);
+  
 
   // Development authentication bypass for demo purposes
   app.get('/api/demo-login/:role', async (req, res) => {
@@ -142,21 +143,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const userId = req.session.user.claims.sub;
         user = await storage.getUser(userId);
       }
-      // Then check for Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        const userId = req.user.claims.sub;
-        user = await storage.getUser(userId);
-      }
       
       if (!user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
-      res.json(user);
+      return res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      return res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
+
+  // Logout route
+  app.post('/api/auth/logout', (req: any, res) => {
+    // Destroy the session
+    req.session.destroy((err: any) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+        return res.status(500).json({ message: "Error logging out" });
+      }
+      // Clear the session cookie
+      res.clearCookie('connect.sid', { path: '/' });
+      return res.json({ success: true });
+    });
   });
 
   // Food items routes
@@ -178,10 +188,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.session.user) {
         userId = req.session.user.claims.sub;
       }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
-      }
       
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -202,10 +208,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check demo session first
       if (req.session.user) {
         userId = req.session.user.claims.sub;
-      }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
       }
       
       if (!userId) {
@@ -241,10 +243,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.session.user) {
         userId = req.session.user.claims.sub;
       }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
-      }
       
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -274,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/food-items/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/food-items/:id', async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -306,10 +304,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check demo session first
       if (req.session.user) {
         userId = req.session.user.claims.sub;
-      }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
       }
       
       if (!userId) {
@@ -362,10 +356,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check demo session first
       if (req.session.user) {
         userId = req.session.user.claims.sub;
-      }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
       }
       
       if (!userId) {
@@ -439,7 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Claim verification endpoints
-  app.post("/api/food-claims/verify", isAuthenticated, async (req: any, res) => {
+  app.post("/api/food-claims/verify", async (req: any, res) => {
     try {
       const { claimCode } = req.body;
       if (!claimCode) {
@@ -466,7 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/food-claims/:id/complete", isAuthenticated, async (req: any, res) => {
+  app.post("/api/food-claims/:id/complete", async (req: any, res) => {
     try {
       const claimId = req.params.id;
       const updatedClaim = await storage.completeClaim(claimId);
@@ -485,10 +475,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check demo session first
       if (req.session.user) {
         userId = req.session.user.claims.sub;
-      }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
       }
       
       if (!userId) {
@@ -516,10 +502,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.session.user) {
         userId = req.session.user.claims.sub;
       }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
-      }
       
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -545,10 +527,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check demo session first
       if (req.session.user) {
         userId = req.session.user.claims.sub;
-      }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
       }
       
       if (!userId) {
@@ -587,10 +565,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check demo session first
       if (req.session.user) {
         userId = req.session.user.claims.sub;
-      }
-      // Then check Replit auth
-      else if (req.isAuthenticated() && req.user) {
-        userId = req.user.claims.sub;
       }
       
       if (!userId) {
