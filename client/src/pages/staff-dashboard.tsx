@@ -20,8 +20,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { insertFoodItemSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import type { FoodItem } from "@shared/schema";
-import { Plus, Utensils, TrendingUp, DollarSign, Edit, Trash2, MoreHorizontal, ShieldCheck, CheckCircle } from "lucide-react";
+import type { FoodItem, FoodDonationWithDetails } from "@shared/schema";
+import { Plus, Utensils, TrendingUp, DollarSign, Edit, Trash2, MoreHorizontal, ShieldCheck, CheckCircle, Heart, Users, Phone, User } from "lucide-react";
 import { formatTimeRemaining } from "@/lib/qr-utils";
 import { z } from "zod";
 import {
@@ -49,6 +49,13 @@ export default function StaffDashboard() {
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [claimCode, setClaimCode] = useState("");
   const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [ngoModalOpen, setNgoModalOpen] = useState(false);
+  const [selectedDonation, setSelectedDonation] = useState<FoodDonationWithDetails | null>(null);
+  const [ngoForm, setNgoForm] = useState({
+    ngoName: "",
+    ngoContactPerson: "",
+    ngoPhoneNumber: "",
+  });
 
   // Redirect if not staff
   if (!authLoading && (!user || user.role !== "staff")) {
@@ -60,6 +67,12 @@ export default function StaffDashboard() {
 
   const { data: myItems = [], isLoading: itemsLoading } = useQuery<FoodItem[]>({
     queryKey: ["/api/food-items/my"],
+    enabled: !!user && user.role === "staff",
+  });
+
+  // Fetch donations
+  const { data: donations = [], isLoading: donationsLoading } = useQuery<FoodDonationWithDetails[]>({
+    queryKey: ["/api/donations"],
     enabled: !!user && user.role === "staff",
   });
 
@@ -236,6 +249,83 @@ export default function StaffDashboard() {
     },
   });
 
+  // Donation mutations
+  const transferExpiredMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/donations/transfer-expired", {});
+      if (!response.ok) {
+        throw new Error("Failed to transfer expired items");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Expired Items Transferred",
+        description: `${data.transferredCount} expired food items have been transferred to donations.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/donations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/food-items/my"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to transfer expired items.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reserveDonationMutation = useMutation({
+    mutationFn: async ({ id, ngoInfo }: { id: string; ngoInfo: any }) => {
+      const response = await apiRequest("PUT", `/api/donations/${id}/reserve`, ngoInfo);
+      if (!response.ok) {
+        throw new Error("Failed to reserve donation");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Donation Reserved",
+        description: "The food item has been reserved for NGO collection.",
+      });
+      setNgoModalOpen(false);
+      setSelectedDonation(null);
+      setNgoForm({ ngoName: "", ngoContactPerson: "", ngoPhoneNumber: "" });
+      queryClient.invalidateQueries({ queryKey: ["/api/donations"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to reserve donation.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const collectDonationMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest("PUT", `/api/donations/${id}/collect`, {});
+      if (!response.ok) {
+        throw new Error("Failed to mark donation as collected");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Donation Collected",
+        description: "The food item has been marked as collected by NGO.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/donations"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to mark donation as collected.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const completeClaimMutation = useMutation({
     mutationFn: async (claimId: string) => {
       const response = await apiRequest("POST", `/api/food-claims/${claimId}/complete`, {});
@@ -376,9 +466,10 @@ export default function StaffDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="verify" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="verify">Verify Claims</TabsTrigger>
             <TabsTrigger value="manage">Manage Items</TabsTrigger>
+            <TabsTrigger value="donate">Donate</TabsTrigger>
           </TabsList>
 
           <TabsContent value="verify" className="space-y-6">
@@ -814,10 +905,265 @@ export default function StaffDashboard() {
           </CardContent>
         </Card>
           </TabsContent>
+
+          <TabsContent value="donate" className="space-y-6">
+            {/* Transfer Expired Items */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="w-5 h-5" />
+                  Transfer Expired Items to Donations
+                </CardTitle>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Transfer expired food items to the donation pool for NGO collection
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => transferExpiredMutation.mutate()}
+                  disabled={transferExpiredMutation.isPending}
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  data-testid="button-transfer-expired"
+                >
+                  {transferExpiredMutation.isPending ? "Transferring..." : "Transfer Expired Items"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Donations List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Donated Food Items
+                </CardTitle>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage food donations for NGO collection
+                </p>
+              </CardHeader>
+              <CardContent>
+                {donationsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-forest mx-auto mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Loading donations...</p>
+                  </div>
+                ) : donations.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      No Donations Yet
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Transfer expired food items to start helping those in need
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Food Item</TableHead>
+                          <TableHead>Quantity</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>NGO Details</TableHead>
+                          <TableHead>Donated Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {donations.map((donation) => (
+                          <TableRow key={donation.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-lg flex-shrink-0 flex items-center justify-center">
+                                  {donation.foodItem?.imageUrl ? (
+                                    <img
+                                      src={donation.foodItem.imageUrl}
+                                      alt={donation.foodItem.name}
+                                      className="w-full h-full object-cover rounded-lg"
+                                    />
+                                  ) : (
+                                    <Utensils className="w-6 h-6 text-gray-400" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white">
+                                    {donation.foodItem?.name}
+                                  </p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {donation.foodItem?.canteenName}
+                                  </p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-gray-900 dark:text-white">
+                                {donation.quantityDonated}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={
+                                  donation.status === "collected" ? "default" :
+                                  donation.status === "reserved_for_ngo" ? "secondary" : 
+                                  "outline"
+                                }
+                                data-testid={`status-${donation.status}-${donation.id}`}
+                              >
+                                {donation.status === "available" && "Available"}
+                                {donation.status === "reserved_for_ngo" && "Reserved for NGO"}
+                                {donation.status === "collected" && "Collected"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {donation.ngoName ? (
+                                <div className="text-sm">
+                                  <div className="font-medium">{donation.ngoName}</div>
+                                  <div className="text-gray-500 dark:text-gray-400">
+                                    {donation.ngoContactPerson}
+                                  </div>
+                                  <div className="text-gray-500 dark:text-gray-400">
+                                    {donation.ngoPhoneNumber}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">Not assigned</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-gray-600 dark:text-gray-400">
+                              {new Date(donation.donatedAt).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              {donation.status === "available" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedDonation(donation);
+                                    setNgoModalOpen(true);
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                  data-testid={`button-reserve-${donation.id}`}
+                                >
+                                  Reserve for NGO
+                                </Button>
+                              )}
+                              {donation.status === "reserved_for_ngo" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => collectDonationMutation.mutate(donation.id)}
+                                  disabled={collectDonationMutation.isPending}
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  data-testid={`button-collect-${donation.id}`}
+                                >
+                                  {collectDonationMutation.isPending ? "Updating..." : "Mark Collected"}
+                                </Button>
+                              )}
+                              {donation.status === "collected" && (
+                                <Badge variant="default" className="bg-green-100 text-green-800">
+                                  Completed
+                                </Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
       <Footer />
+
+      {/* NGO Reservation Modal */}
+      <Dialog open={ngoModalOpen} onOpenChange={setNgoModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Reserve for NGO Collection
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedDonation && (
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <p className="font-medium">{selectedDonation.foodItem?.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Quantity: {selectedDonation.quantityDonated} items
+                </p>
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="ngoName">NGO Name</Label>
+                <Input
+                  id="ngoName"
+                  placeholder="Enter NGO name"
+                  value={ngoForm.ngoName}
+                  onChange={(e) => setNgoForm(prev => ({ ...prev, ngoName: e.target.value }))}
+                  data-testid="input-ngo-name"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="ngoContactPerson">Contact Person</Label>
+                <Input
+                  id="ngoContactPerson"
+                  placeholder="Enter contact person name"
+                  value={ngoForm.ngoContactPerson}
+                  onChange={(e) => setNgoForm(prev => ({ ...prev, ngoContactPerson: e.target.value }))}
+                  data-testid="input-ngo-contact"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="ngoPhoneNumber">Phone Number</Label>
+                <Input
+                  id="ngoPhoneNumber"
+                  placeholder="Enter phone number"
+                  value={ngoForm.ngoPhoneNumber}
+                  onChange={(e) => setNgoForm(prev => ({ ...prev, ngoPhoneNumber: e.target.value }))}
+                  data-testid="input-ngo-phone"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setNgoModalOpen(false);
+                  setSelectedDonation(null);
+                  setNgoForm({ ngoName: "", ngoContactPerson: "", ngoPhoneNumber: "" });
+                }}
+                className="flex-1"
+                data-testid="button-cancel-ngo"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedDonation) {
+                    reserveDonationMutation.mutate({
+                      id: selectedDonation.id,
+                      ngoInfo: ngoForm,
+                    });
+                  }
+                }}
+                disabled={!ngoForm.ngoName || !ngoForm.ngoContactPerson || !ngoForm.ngoPhoneNumber || reserveDonationMutation.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                data-testid="button-confirm-ngo"
+              >
+                {reserveDonationMutation.isPending ? "Reserving..." : "Reserve for NGO"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

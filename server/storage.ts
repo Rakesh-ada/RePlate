@@ -2,14 +2,18 @@ import {
   users,
   foodItems,
   foodClaims,
+  foodDonations,
   type User,
   type UpsertUser,
   type FoodItem,
   type InsertFoodItem,
   type FoodClaim,
   type InsertFoodClaim,
+  type FoodDonation,
+  type InsertFoodDonation,
   type FoodItemWithCreator,
   type FoodClaimWithDetails,
+  type FoodDonationWithDetails,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, sql } from "drizzle-orm";
@@ -39,6 +43,14 @@ export interface IStorage {
   
   // Complete a claim (mark as collected)
   completeClaim(claimId: string): Promise<FoodClaimWithDetails>;
+
+  // Food donation operations
+  getExpiredFoodItems(): Promise<FoodItem[]>;
+  createFoodDonation(donation: InsertFoodDonation): Promise<FoodDonation>;
+  getAllDonations(): Promise<FoodDonationWithDetails[]>;
+  getDonationsByCreator(creatorId: string): Promise<FoodDonationWithDetails[]>;
+  updateDonationStatus(id: string, status: string, ngoInfo?: { ngoName: string; ngoContactPerson: string; ngoPhoneNumber: string; }): Promise<FoodDonation>;
+  transferExpiredItemsToDonations(): Promise<number>;
 
   // Stats operations
   getCampusStats(): Promise<{
@@ -339,6 +351,118 @@ export class DatabaseStorage implements IStorage {
     }
 
     return claim[0] as FoodClaimWithDetails;
+  }
+
+  // Food donation operations
+  async getExpiredFoodItems(): Promise<FoodItem[]> {
+    const now = new Date().toISOString();
+    return await db
+      .select()
+      .from(foodItems)
+      .where(
+        and(
+          eq(foodItems.isActive, true),
+          sql`${foodItems.availableUntil} < ${now}`
+        )
+      )
+      .orderBy(desc(foodItems.createdAt));
+  }
+
+  async createFoodDonation(donation: InsertFoodDonation): Promise<FoodDonation> {
+    const [newDonation] = await db.insert(foodDonations).values(donation).returning();
+    return newDonation;
+  }
+
+  async getAllDonations(): Promise<FoodDonationWithDetails[]> {
+    return await db
+      .select({
+        id: foodDonations.id,
+        foodItemId: foodDonations.foodItemId,
+        ngoName: foodDonations.ngoName,
+        ngoContactPerson: foodDonations.ngoContactPerson,
+        ngoPhoneNumber: foodDonations.ngoPhoneNumber,
+        quantityDonated: foodDonations.quantityDonated,
+        status: foodDonations.status,
+        donatedAt: foodDonations.donatedAt,
+        reservedAt: foodDonations.reservedAt,
+        collectedAt: foodDonations.collectedAt,
+        notes: foodDonations.notes,
+        createdAt: foodDonations.createdAt,
+        foodItem: foodItems,
+      })
+      .from(foodDonations)
+      .leftJoin(foodItems, eq(foodDonations.foodItemId, foodItems.id))
+      .orderBy(desc(foodDonations.createdAt)) as any;
+  }
+
+  async getDonationsByCreator(creatorId: string): Promise<FoodDonationWithDetails[]> {
+    return await db
+      .select({
+        id: foodDonations.id,
+        foodItemId: foodDonations.foodItemId,
+        ngoName: foodDonations.ngoName,
+        ngoContactPerson: foodDonations.ngoContactPerson,
+        ngoPhoneNumber: foodDonations.ngoPhoneNumber,
+        quantityDonated: foodDonations.quantityDonated,
+        status: foodDonations.status,
+        donatedAt: foodDonations.donatedAt,
+        reservedAt: foodDonations.reservedAt,
+        collectedAt: foodDonations.collectedAt,
+        notes: foodDonations.notes,
+        createdAt: foodDonations.createdAt,
+        foodItem: foodItems,
+      })
+      .from(foodDonations)
+      .leftJoin(foodItems, eq(foodDonations.foodItemId, foodItems.id))
+      .where(eq(foodItems.createdBy, creatorId))
+      .orderBy(desc(foodDonations.createdAt)) as any;
+  }
+
+  async updateDonationStatus(
+    id: string, 
+    status: string, 
+    ngoInfo?: { ngoName: string; ngoContactPerson: string; ngoPhoneNumber: string; }
+  ): Promise<FoodDonation> {
+    const updateData: any = { status };
+    
+    if (status === "reserved_for_ngo" && ngoInfo) {
+      updateData.ngoName = ngoInfo.ngoName;
+      updateData.ngoContactPerson = ngoInfo.ngoContactPerson;
+      updateData.ngoPhoneNumber = ngoInfo.ngoPhoneNumber;
+      updateData.reservedAt = new Date();
+    } else if (status === "collected") {
+      updateData.collectedAt = new Date();
+    }
+
+    const [donation] = await db
+      .update(foodDonations)
+      .set(updateData)
+      .where(eq(foodDonations.id, id))
+      .returning();
+    return donation;
+  }
+
+  async transferExpiredItemsToDonations(): Promise<number> {
+    const expiredItems = await this.getExpiredFoodItems();
+    let transferredCount = 0;
+
+    for (const item of expiredItems) {
+      if (item.quantityAvailable > 0) {
+        // Create donation entry
+        await this.createFoodDonation({
+          foodItemId: item.id,
+          quantityDonated: item.quantityAvailable,
+          status: "available",
+          notes: `Auto-transferred from expired food item: ${item.name}`,
+        });
+
+        // Mark the original item as inactive
+        await this.updateFoodItem(item.id, { isActive: false });
+        transferredCount++;
+      }
+    }
+
+    return transferredCount;
   }
 }
 

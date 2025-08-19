@@ -70,6 +70,22 @@ export const foodClaims = pgTable("food_claims", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Food donations table
+export const foodDonations = pgTable("food_donations", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  foodItemId: uuid("food_item_id").notNull().references(() => foodItems.id),
+  ngoName: varchar("ngo_name", { length: 255 }),
+  ngoContactPerson: varchar("ngo_contact_person", { length: 255 }),
+  ngoPhoneNumber: varchar("ngo_phone_number", { length: 20 }),
+  quantityDonated: integer("quantity_donated").notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("available"), // available, reserved_for_ngo, collected
+  donatedAt: timestamp("donated_at").defaultNow(),
+  reservedAt: timestamp("reserved_at"),
+  collectedAt: timestamp("collected_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   foodItems: many(foodItems),
@@ -82,6 +98,7 @@ export const foodItemsRelations = relations(foodItems, ({ one, many }) => ({
     references: [users.id],
   }),
   claims: many(foodClaims),
+  donations: many(foodDonations),
 }));
 
 export const foodClaimsRelations = relations(foodClaims, ({ one }) => ({
@@ -91,6 +108,13 @@ export const foodClaimsRelations = relations(foodClaims, ({ one }) => ({
   }),
   foodItem: one(foodItems, {
     fields: [foodClaims.foodItemId],
+    references: [foodItems.id],
+  }),
+}));
+
+export const foodDonationsRelations = relations(foodDonations, ({ one }) => ({
+  foodItem: one(foodItems, {
+    fields: [foodDonations.foodItemId],
     references: [foodItems.id],
   }),
 }));
@@ -118,6 +142,12 @@ export const insertFoodClaimSchema = createInsertSchema(foodClaims).omit({
   createdAt: true,
 });
 
+export const insertFoodDonationSchema = createInsertSchema(foodDonations).omit({
+  id: true,
+  donatedAt: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -125,6 +155,8 @@ export type InsertFoodItem = z.infer<typeof insertFoodItemSchema>;
 export type FoodItem = typeof foodItems.$inferSelect;
 export type InsertFoodClaim = z.infer<typeof insertFoodClaimSchema>;
 export type FoodClaim = typeof foodClaims.$inferSelect;
+export type InsertFoodDonation = z.infer<typeof insertFoodDonationSchema>;
+export type FoodDonation = typeof foodDonations.$inferSelect;
 
 // Extended types with relations
 export type FoodItemWithCreator = FoodItem & {
@@ -133,5 +165,9 @@ export type FoodItemWithCreator = FoodItem & {
 
 export type FoodClaimWithDetails = FoodClaim & {
   user: User;
+  foodItem: FoodItem;
+};
+
+export type FoodDonationWithDetails = FoodDonation & {
   foodItem: FoodItem;
 };

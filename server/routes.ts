@@ -477,6 +477,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Food donation routes
+  app.get('/api/donations', async (req: any, res) => {
+    try {
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'staff') {
+        return res.status(403).json({ message: "Only staff can view donations" });
+      }
+
+      const donations = await storage.getDonationsByCreator(userId);
+      res.json(donations);
+    } catch (error) {
+      console.error("Error fetching donations:", error);
+      res.status(500).json({ message: "Failed to fetch donations" });
+    }
+  });
+
+  app.post('/api/donations/transfer-expired', async (req: any, res) => {
+    try {
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'staff') {
+        return res.status(403).json({ message: "Only staff can transfer expired items" });
+      }
+
+      const transferredCount = await storage.transferExpiredItemsToDonations();
+      res.json({ success: true, transferredCount });
+    } catch (error) {
+      console.error("Error transferring expired items:", error);
+      res.status(500).json({ message: "Failed to transfer expired items" });
+    }
+  });
+
+  app.put('/api/donations/:id/reserve', async (req: any, res) => {
+    try {
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'staff') {
+        return res.status(403).json({ message: "Only staff can manage donations" });
+      }
+
+      const { id } = req.params;
+      const { ngoName, ngoContactPerson, ngoPhoneNumber } = req.body;
+
+      if (!ngoName || !ngoContactPerson || !ngoPhoneNumber) {
+        return res.status(400).json({ message: "NGO information is required" });
+      }
+
+      const updatedDonation = await storage.updateDonationStatus(id, "reserved_for_ngo", {
+        ngoName,
+        ngoContactPerson,
+        ngoPhoneNumber,
+      });
+
+      res.json(updatedDonation);
+    } catch (error) {
+      console.error("Error reserving donation:", error);
+      res.status(500).json({ message: "Failed to reserve donation" });
+    }
+  });
+
+  app.put('/api/donations/:id/collect', async (req: any, res) => {
+    try {
+      let userId = null;
+      
+      // Check demo session first
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      // Then check Replit auth
+      else if (req.isAuthenticated() && req.user) {
+        userId = req.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'staff') {
+        return res.status(403).json({ message: "Only staff can manage donations" });
+      }
+
+      const { id } = req.params;
+      const updatedDonation = await storage.updateDonationStatus(id, "collected");
+      res.json(updatedDonation);
+    } catch (error) {
+      console.error("Error marking donation as collected:", error);
+      res.status(500).json({ message: "Failed to mark donation as collected" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -2,7 +2,18 @@
 
 RePlate Campus is a comprehensive web application designed to reduce food waste on university campuses by connecting students with discounted surplus food items from campus canteens. The platform features a dual-user system where staff can list available food items with discounted pricing and students can browse, claim, and pick up meals using QR codes for verification.
 
-The application implements a modern full-stack architecture with real-time food listings, secure authentication, and a comprehensive QR code claiming system that enables seamless food pickup from participating campus canteens.
+The application implements a modern full-stack architecture with real-time food listings, secure authentication, a comprehensive QR code claiming system, and a food donation management system for NGO partnerships that ensures expired food items are redirected to help those in need.
+
+## Recent Changes
+
+**August 19, 2025 - Food Donation System Implementation:**
+- Added complete donation management system for expired food items
+- Created food donations database schema with NGO tracking
+- Implemented staff dashboard donation tab with transfer and management capabilities
+- Added backend APIs for donation operations (transfer, reserve, collect)
+- Integrated automated expired food item transfer to donation pool
+- Built NGO reservation system with contact information management
+- Updated currency display to Indian Rupees (₹) throughout application
 
 # User Preferences
 
