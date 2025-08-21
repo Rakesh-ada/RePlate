@@ -1031,7 +1031,7 @@ export default function StaffDashboard() {
                               )}
                             </TableCell>
                             <TableCell className="text-gray-600 dark:text-gray-400">
-                              {new Date(donation.donatedAt).toLocaleDateString()}
+                            {donation.donatedAt ? new Date(donation.donatedAt).toLocaleDateString() : 'N/A'}
                             </TableCell>
                             <TableCell>
                               {donation.status === "available" && (

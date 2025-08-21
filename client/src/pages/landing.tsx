@@ -61,7 +61,7 @@ export default function Landing() {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <span className="relative flex items-center">
-                  Student Demo Login
+                  Student Login
                   <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
               </Button>
@@ -77,7 +77,7 @@ export default function Landing() {
                 }}
               >
                 <span className="relative flex items-center">
-                  Staff Demo Login
+                  Staff Login
                   <span className="ml-2 transform group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
               </Button>
@@ -141,7 +141,7 @@ export default function Landing() {
               {
                 number: "02", 
                 title: "Claim Your Meal",
-                description: "Reserve meals instantly with a unique claim code and 2-hour pickup window for guaranteed freshness.",
+                description: "Easily secure your meal with a unique claim code that grants you access within a convenient 2-hour pickup window, ensuring your food stays fresh.",
                 icon: QrCode,
                 bgColor: "bg-forest/10",
                 iconColor: "text-forest"

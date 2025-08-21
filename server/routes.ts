@@ -272,20 +272,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/food-items/:id', async (req: any, res) => {
+  app.delete('/api/food-items/:id', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user || user.role !== 'staff') {
-        return res.status(403).json({ message: "Only staff can delete food items" });
-      }
-
       const { id } = req.params;
       const existingItem = await storage.getFoodItemById(id);
       
-      if (!existingItem || existingItem.createdBy !== userId) {
-        return res.status(404).json({ message: "Food item not found or unauthorized" });
+      if (!existingItem) {
+        return res.status(404).json({ message: "Food item not found" });
       }
 
       await storage.deleteFoodItem(id);

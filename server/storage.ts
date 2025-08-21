@@ -27,20 +27,31 @@ export interface IStorage {
   getAllActiveFoodItems(): Promise<FoodItemWithCreator[]>;
   getFoodItemById(id: string): Promise<FoodItem | undefined>;
   createFoodItem(foodItem: InsertFoodItem): Promise<FoodItem>;
-  updateFoodItem(id: string, updates: Partial<InsertFoodItem>): Promise<FoodItem>;
+  updateFoodItem(
+    id: string,
+    updates: Partial<InsertFoodItem>,
+  ): Promise<FoodItem>;
   deleteFoodItem(id: string): Promise<void>;
   getFoodItemsByCreator(creatorId: string): Promise<FoodItem[]>;
 
   // Food claim operations
-  createFoodClaim(claim: InsertFoodClaim & { claimCode: string }): Promise<FoodClaim>;
+  createFoodClaim(
+    claim: InsertFoodClaim & { claimCode: string },
+  ): Promise<FoodClaim>;
   getFoodClaimsByUser(userId: string): Promise<FoodClaimWithDetails[]>;
-  getFoodClaimByClaimCode(claimCode: string): Promise<FoodClaimWithDetails | undefined>;
-  updateFoodClaimStatus(id: string, status: string, claimedAt?: Date): Promise<FoodClaim>;
+  getFoodClaimByClaimCode(
+    claimCode: string,
+  ): Promise<FoodClaimWithDetails | undefined>;
+  updateFoodClaimStatus(
+    id: string,
+    status: string,
+    claimedAt?: Date,
+  ): Promise<FoodClaim>;
   getActiveFoodClaims(): Promise<FoodClaimWithDetails[]>;
-  
+
   // Get claim with full details for verification
   getClaimByCode(claimCode: string): Promise<FoodClaimWithDetails | undefined>;
-  
+
   // Complete a claim (mark as collected)
   completeClaim(claimId: string): Promise<FoodClaimWithDetails>;
 
@@ -49,8 +60,19 @@ export interface IStorage {
   createFoodDonation(donation: InsertFoodDonation): Promise<FoodDonation>;
   getAllDonations(): Promise<FoodDonationWithDetails[]>;
   getDonationsByCreator(creatorId: string): Promise<FoodDonationWithDetails[]>;
-  updateDonationStatus(id: string, status: string, ngoInfo?: { ngoName: string; ngoContactPerson: string; ngoPhoneNumber: string; }): Promise<FoodDonation>;
+  updateDonationStatus(
+    id: string,
+    status: string,
+    ngoInfo?: {
+      ngoName: string;
+      ngoContactPerson: string;
+      ngoPhoneNumber: string;
+    },
+  ): Promise<FoodDonation>;
   transferExpiredItemsToDonations(): Promise<number>;
+
+  // Status management
+  updateExpiredItemsStatus(): Promise<number>;
 
   // Stats operations
   getCampusStats(): Promise<{
@@ -86,7 +108,11 @@ export class DatabaseStorage implements IStorage {
   // Food item operations
   async getAllActiveFoodItems(): Promise<FoodItemWithCreator[]> {
     const now = new Date().toISOString();
-    return await db
+
+    // First, automatically deactivate expired items
+    await this.updateExpiredItemsStatus();
+
+    return (await db
       .select({
         id: foodItems.id,
         name: foodItems.name,
@@ -110,14 +136,17 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(foodItems.isActive, true),
           gte(foodItems.availableUntil, now),
-          gte(foodItems.quantityAvailable, 1)
-        )
+          gte(foodItems.quantityAvailable, 1),
+        ),
       )
-      .orderBy(desc(foodItems.createdAt)) as any;
+      .orderBy(desc(foodItems.createdAt))) as any;
   }
 
   async getFoodItemById(id: string): Promise<FoodItem | undefined> {
-    const [item] = await db.select().from(foodItems).where(eq(foodItems.id, id));
+    const [item] = await db
+      .select()
+      .from(foodItems)
+      .where(eq(foodItems.id, id));
     return item;
   }
 
@@ -126,7 +155,10 @@ export class DatabaseStorage implements IStorage {
     return item;
   }
 
-  async updateFoodItem(id: string, updates: Partial<InsertFoodItem>): Promise<FoodItem> {
+  async updateFoodItem(
+    id: string,
+    updates: Partial<InsertFoodItem>,
+  ): Promise<FoodItem> {
     const [item] = await db
       .update(foodItems)
       .set({ ...updates, updatedAt: new Date() })
@@ -136,10 +168,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteFoodItem(id: string): Promise<void> {
+    // Delete associated food donations first (if any)
+    await db.delete(foodDonations).where(eq(foodDonations.foodItemId, id));
+
+    // Delete associated food claims
+    await db.delete(foodClaims).where(eq(foodClaims.foodItemId, id));
+
+    // Finally delete the food item
     await db.delete(foodItems).where(eq(foodItems.id, id));
   }
 
   async getFoodItemsByCreator(creatorId: string): Promise<FoodItem[]> {
+    // Update expired items status before fetching
+    await this.updateExpiredItemsStatus();
+
     return await db
       .select()
       .from(foodItems)
@@ -148,9 +190,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Food claim operations
-  async createFoodClaim(claim: InsertFoodClaim & { claimCode: string }): Promise<FoodClaim> {
+  async createFoodClaim(
+    claim: InsertFoodClaim & { claimCode: string },
+  ): Promise<FoodClaim> {
     const [newClaim] = await db.insert(foodClaims).values(claim).returning();
-    
+
     // Update food item quantity
     await db
       .update(foodItems)
@@ -164,7 +208,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFoodClaimsByUser(userId: string): Promise<FoodClaimWithDetails[]> {
-    return await db
+    return (await db
       .select({
         id: foodClaims.id,
         userId: foodClaims.userId,
@@ -182,11 +226,13 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(foodClaims.userId, users.id))
       .leftJoin(foodItems, eq(foodClaims.foodItemId, foodItems.id))
       .where(eq(foodClaims.userId, userId))
-      .orderBy(desc(foodClaims.createdAt)) as any;
+      .orderBy(desc(foodClaims.createdAt))) as any;
   }
 
-  async getFoodClaimByClaimCode(claimCode: string): Promise<FoodClaimWithDetails | undefined> {
-    const [claim] = await db
+  async getFoodClaimByClaimCode(
+    claimCode: string,
+  ): Promise<FoodClaimWithDetails | undefined> {
+    const [claim] = (await db
       .select({
         id: foodClaims.id,
         userId: foodClaims.userId,
@@ -203,12 +249,16 @@ export class DatabaseStorage implements IStorage {
       .from(foodClaims)
       .leftJoin(users, eq(foodClaims.userId, users.id))
       .leftJoin(foodItems, eq(foodClaims.foodItemId, foodItems.id))
-      .where(eq(foodClaims.claimCode, claimCode)) as any;
-    
+      .where(eq(foodClaims.claimCode, claimCode))) as any;
+
     return claim;
   }
 
-  async updateFoodClaimStatus(id: string, status: string, claimedAt?: Date): Promise<FoodClaim> {
+  async updateFoodClaimStatus(
+    id: string,
+    status: string,
+    claimedAt?: Date,
+  ): Promise<FoodClaim> {
     const [claim] = await db
       .update(foodClaims)
       .set({ status, claimedAt })
@@ -219,7 +269,7 @@ export class DatabaseStorage implements IStorage {
 
   async getActiveFoodClaims(): Promise<FoodClaimWithDetails[]> {
     const now = new Date();
-    return await db
+    return (await db
       .select({
         id: foodClaims.id,
         userId: foodClaims.userId,
@@ -237,12 +287,9 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(foodClaims.userId, users.id))
       .leftJoin(foodItems, eq(foodClaims.foodItemId, foodItems.id))
       .where(
-        and(
-          eq(foodClaims.status, "reserved"),
-          gte(foodClaims.expiresAt, now)
-        )
+        and(eq(foodClaims.status, "reserved"), gte(foodClaims.expiresAt, now)),
       )
-      .orderBy(desc(foodClaims.createdAt)) as any;
+      .orderBy(desc(foodClaims.createdAt))) as any;
   }
 
   async getCampusStats(): Promise<{
@@ -260,7 +307,7 @@ export class DatabaseStorage implements IStorage {
     // Get active students (users with claims in last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     const [activeStudents] = await db
       .select({ count: sql<number>`count(distinct user_id)` })
       .from(foodClaims)
@@ -290,7 +337,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Get claim with full details for verification (alias for getFoodClaimByClaimCode)
-  async getClaimByCode(claimCode: string): Promise<FoodClaimWithDetails | undefined> {
+  async getClaimByCode(
+    claimCode: string,
+  ): Promise<FoodClaimWithDetails | undefined> {
     return this.getFoodClaimByClaimCode(claimCode);
   }
 
@@ -298,7 +347,7 @@ export class DatabaseStorage implements IStorage {
   async completeClaim(claimId: string): Promise<FoodClaimWithDetails> {
     // Update the claim status to 'claimed'
     await this.updateFoodClaimStatus(claimId, "claimed", new Date());
-    
+
     // Return the updated claim with full details
     const claim = await db
       .select({
@@ -361,20 +410,63 @@ export class DatabaseStorage implements IStorage {
       .from(foodItems)
       .where(
         and(
-          eq(foodItems.isActive, true),
-          sql`${foodItems.availableUntil} < ${now}`
-        )
+          eq(foodItems.isActive, false), // Now get inactive items (which are expired)
+          sql`${foodItems.availableUntil} < ${now}`,
+        ),
       )
       .orderBy(desc(foodItems.createdAt));
   }
 
-  async createFoodDonation(donation: InsertFoodDonation): Promise<FoodDonation> {
-    const [newDonation] = await db.insert(foodDonations).values(donation).returning();
+  // New method to automatically update expired items to inactive
+  async updateExpiredItemsStatus(): Promise<number> {
+    const now = new Date().toISOString();
+
+    // Set expired items to inactive
+    const expiredResult = await db
+      .update(foodItems)
+      .set({
+        isActive: false,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(foodItems.isActive, true),
+          sql`${foodItems.availableUntil} < ${now}`,
+        ),
+      )
+      .returning({ id: foodItems.id });
+
+    // Reactivate items that are not expired anymore (in case time was extended)
+    const reactivatedResult = await db
+      .update(foodItems)
+      .set({
+        isActive: true,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(foodItems.isActive, false),
+          gte(foodItems.availableUntil, now),
+          gte(foodItems.quantityAvailable, 1),
+        ),
+      )
+      .returning({ id: foodItems.id });
+
+    return expiredResult.length;
+  }
+
+  async createFoodDonation(
+    donation: InsertFoodDonation,
+  ): Promise<FoodDonation> {
+    const [newDonation] = await db
+      .insert(foodDonations)
+      .values(donation)
+      .returning();
     return newDonation;
   }
 
   async getAllDonations(): Promise<FoodDonationWithDetails[]> {
-    return await db
+    return (await db
       .select({
         id: foodDonations.id,
         foodItemId: foodDonations.foodItemId,
@@ -392,11 +484,13 @@ export class DatabaseStorage implements IStorage {
       })
       .from(foodDonations)
       .leftJoin(foodItems, eq(foodDonations.foodItemId, foodItems.id))
-      .orderBy(desc(foodDonations.createdAt)) as any;
+      .orderBy(desc(foodDonations.createdAt))) as any;
   }
 
-  async getDonationsByCreator(creatorId: string): Promise<FoodDonationWithDetails[]> {
-    return await db
+  async getDonationsByCreator(
+    creatorId: string,
+  ): Promise<FoodDonationWithDetails[]> {
+    return (await db
       .select({
         id: foodDonations.id,
         foodItemId: foodDonations.foodItemId,
@@ -415,16 +509,20 @@ export class DatabaseStorage implements IStorage {
       .from(foodDonations)
       .leftJoin(foodItems, eq(foodDonations.foodItemId, foodItems.id))
       .where(eq(foodItems.createdBy, creatorId))
-      .orderBy(desc(foodDonations.createdAt)) as any;
+      .orderBy(desc(foodDonations.createdAt))) as any;
   }
 
   async updateDonationStatus(
-    id: string, 
-    status: string, 
-    ngoInfo?: { ngoName: string; ngoContactPerson: string; ngoPhoneNumber: string; }
+    id: string,
+    status: string,
+    ngoInfo?: {
+      ngoName: string;
+      ngoContactPerson: string;
+      ngoPhoneNumber: string;
+    },
   ): Promise<FoodDonation> {
     const updateData: any = { status };
-    
+
     if (status === "reserved_for_ngo" && ngoInfo) {
       updateData.ngoName = ngoInfo.ngoName;
       updateData.ngoContactPerson = ngoInfo.ngoContactPerson;
@@ -443,22 +541,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async transferExpiredItemsToDonations(): Promise<number> {
+    // First update expired items status
+    await this.updateExpiredItemsStatus();
+
     const expiredItems = await this.getExpiredFoodItems();
     let transferredCount = 0;
 
     for (const item of expiredItems) {
       if (item.quantityAvailable > 0) {
-        // Create donation entry
-        await this.createFoodDonation({
-          foodItemId: item.id,
-          quantityDonated: item.quantityAvailable,
-          status: "available",
-          notes: `Auto-transferred from expired food item: ${item.name}`,
-        });
+        // Check if donation already exists for this item
+        const existingDonation = await db
+          .select()
+          .from(foodDonations)
+          .where(eq(foodDonations.foodItemId, item.id))
+          .limit(1);
 
-        // Mark the original item as inactive
-        await this.updateFoodItem(item.id, { isActive: false });
-        transferredCount++;
+        if (existingDonation.length === 0) {
+          // Create donation entry only if it doesn't exist
+          await this.createFoodDonation({
+            foodItemId: item.id,
+            quantityDonated: item.quantityAvailable,
+            status: "available",
+            notes: `Auto-transferred from expired food item: ${item.name}`,
+          });
+          transferredCount++;
+        }
       }
     }
 
