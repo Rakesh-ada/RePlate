@@ -10,8 +10,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "wouter";
+import { useLocation } from "wouter";
 
 export function Navbar() {
+  const [, setLocation] = useLocation()
   const { user, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -33,13 +35,22 @@ export function Navbar() {
               </span>
             </div>
           </Link>
-
-          {/* User Info and Actions */}
+            {/* User Info and Actions */}
           <div className="flex items-center space-x-6">
+            {/* Theme Toggle - moved before login */}
+            <Button
+              onClick={toggleTheme}
+              className="w-10 h-10 p-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-105"
+            >
+              {theme === "light" ? (
+                <Sun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <Moon className="h-5 w-5 text-blue-400" />
+              )}
+            </Button>
+
             {isAuthenticated && user ? (
               <>
-                
-                
                 <div className="flex items-center space-x-3">
                   {user.role === "student" && (
                     <Link href="/student">
@@ -80,18 +91,23 @@ export function Navbar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
-            ) : null}
-
-            <Button
-              onClick={toggleTheme}
-              className="w-10 h-10 p-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              {theme === "light" ? (
-                <Sun className="h-5 w-5 text-yellow-500" />
-              ) : (
-                <Moon className="h-5 w-5 text-blue-400" />
-              )}
-            </Button>
+            ) : (
+              /* CTA Buttons - moved to right side when not authenticated */
+              <Button 
+                className="group relative bg-gradient-to-r from-forest to-forest-dark hover:from-forest-dark hover:to-forest text-white px-10 py-4 text-lg font-semibold rounded-2xl shadow-2xl hover:shadow-forest/25 transition-all duration-300 hover:scale-105 border-0"
+                onClick={async() => {
+                    console.log("Navigating to student login");
+                     await fetch('/api/auth/logout', { method: 'POST' });
+                      setLocation("/signup");
+                  }
+                }
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative flex items-center">
+                  Login
+                </span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

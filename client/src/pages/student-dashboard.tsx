@@ -148,11 +148,14 @@ export default function StudentDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Canteens</SelectItem>
-                  {canteens.map(canteen => (
-                    <SelectItem key={canteen} value={canteen}>
-                      {canteen}
-                    </SelectItem>
-                  ))}
+                  {canteens.map(canteen => {
+                    const safeValue = canteen && canteen.trim() !== "" ? canteen : "unknown";
+                    return (
+                      <SelectItem key={safeValue} value={safeValue}>
+                        {safeValue === "unknown" ? "Unnamed Canteen" : safeValue}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
 
