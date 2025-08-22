@@ -1,144 +1,223 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-
+import { OAuth2Client } from "google-auth-library";
+import { eq, desc, and, gte } from 'drizzle-orm';
 import { insertFoodItemSchema, insertFoodClaimSchema } from "@shared/schema";
 import { generateClaimCode } from "@shared/qr-utils";
 import { z } from "zod";
-import 'express-session';
+import { db } from './db';
 
-// Extend session interface for demo auth
-declare module 'express-session' {
-  interface SessionData {
-    user?: {
-      claims: { sub: string };
-      access_token: string;
-      expires_at: number;
-    };
-  }
-}
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  `${process.env.BASE_URL || 'http://localhost:5000'}/api/auth/google/callback`
+);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  
+ // Google OAuth routes
+app.get('/api/auth/google', (req, res) => {
+  const authUrl = googleClient.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['openid', 'profile', 'email'],  // 👈 MUST include openid
+    prompt: 'consent',
+    state: 'signup',
+  });
+  res.redirect(authUrl);
+});
 
-  // Development authentication bypass for demo purposes
-  app.get('/api/demo-login/:role', async (req, res) => {
+app.get('/api/auth/google/callback', async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) {
+      return res.redirect('/?error=no_code');
+    }
+
+    const { tokens } = await googleClient.getToken(code as string);
+    googleClient.setCredentials(tokens);
+    console.log('Google tokens:', tokens);
+
+    // Check if id_token exists
+    if (!tokens.id_token) {
+      console.error('No id_token received from Google');
+      return res.redirect('/?error=no_id_token');
+    }
+
+    // Verify ID token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      return res.redirect('/?error=invalid_token');
+    }
+
+    // Create or get user
+    const user = await storage.upsertUser({
+      id: payload.sub,
+      email: payload.email!,
+      firstName: payload.given_name || '',
+      lastName: payload.family_name || '',
+      role: 'student',
+      studentId: `STU${payload.sub.slice(-6)}`,
+      phoneNumber: null,
+    });
+
+    // Create session
+    req.session.user = {
+      claims: { sub: user.id },
+      access_token: tokens.access_token || 'google-token',
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+    };
+
+    // Redirect after login
+    res.redirect('/student');
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.redirect('/?error=auth_failed');
+  }
+});
+
+  // Staff request routes
+  app.post('/api/staff/request', async (req, res) => {
     try {
-      const { role } = req.params;
-      
-      if (role !== 'student' && role !== 'staff') {
-        return res.status(400).json({ message: "Invalid role. Use 'student' or 'staff'" });
+      const { firstName, lastName, email, phoneNumber, department, position, reason } = req.body;
+
+      if (!firstName || !lastName || !email || !phoneNumber || !department || !position || !reason) {
+        return res.status(400).json({ message: 'All fields are required' });
       }
 
-      // Create or get existing demo user
-      const demoUser = await storage.upsertUser({
-        id: `demo-${role}-main`,
-        email: `${role}-main@demo.edu`,
-        firstName: role === 'staff' ? 'Demo' : 'Student',
-        lastName: role === 'staff' ? 'Staff' : 'Demo',
-        role: role,
-        studentId: role === 'student' ? 'STU123456' : undefined,
-        phoneNumber: '+1234567890',
+      const existingRequest = await storage.getStaffRequestByEmail(email);
+      if (existingRequest) {
+        return res.status(409).json({ message: 'A request with this email already exists' });
+      }
+
+      const staffRequest = await storage.createStaffRequest({
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        department,
+        position,
+        reason,
+        status: 'pending',
       });
 
-      // Create demo session
-      req.session.user = {
-        claims: { sub: demoUser.id },
-        access_token: 'demo-token',
-        expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour
-      };
-
-      res.json({ success: true, user: demoUser });
+      res.status(201).json({ success: true, requestId: staffRequest.id });
     } catch (error) {
-      console.error("Error creating demo user:", error);
-      res.status(500).json({ message: "Failed to create demo user" });
+      console.error('Error creating staff request:', error);
+      res.status(500).json({ message: 'Failed to create staff request' });
     }
   });
 
-  // Demo data seeding
-  app.post('/api/seed-demo-data', async (req, res) => {
+  // Admin routes for managing staff requests
+  app.get('/api/admin/staff-requests', async (req, res) => {
     try {
-      // Use the main demo staff user (same as login)
+      let userId = null;
+      
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const requests = await storage.getAllStaffRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error('Error fetching staff requests:', error);
+      res.status(500).json({ message: 'Failed to fetch staff requests' });
+    }
+  });
+
+  app.put('/api/admin/staff-requests/:id/approve', async (req, res) => {
+    try {
+      let userId = null;
+      
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      const staffRequest = await storage.getStaffRequestById(id);
+      
+      if (!staffRequest) {
+        return res.status(404).json({ message: 'Staff request not found' });
+      }
+
+      if (staffRequest.status !== 'pending') {
+        return res.status(400).json({ message: 'Request has already been processed' });
+      }
+
       const staffUser = await storage.upsertUser({
-        id: 'demo-staff-main',
-        email: `staff-main@demo.edu`,
-        firstName: 'Demo',
-        lastName: 'Staff',
+        id: `staff-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        email: staffRequest.email,
+        firstName: staffRequest.firstName,
+        lastName: staffRequest.lastName,
         role: 'staff',
-        phoneNumber: '+1234567890',
+        phoneNumber: staffRequest.phoneNumber,
+        studentId: undefined,
       });
 
-      // Check if demo data already exists for this user
-      const existingItems = await storage.getFoodItemsByCreator(staffUser.id);
-      if (existingItems.length > 0) {
-        return res.json({ success: true, message: 'Demo data already exists' });
-      }
+      await storage.updateStaffRequestStatus(id, 'approved');
 
-      // Create some demo food items
-      const now = new Date();
-      const availableUntil = new Date();
-      availableUntil.setHours(availableUntil.getHours() + 6); // Available for 6 hours
-
-      const demoFoodItems = [
-        {
-          name: 'Margherita Pizza',
-          description: 'Fresh mozzarella, basil, and tomato sauce on a crispy crust',
-          canteenName: 'Main Campus Cafeteria',
-          canteenLocation: 'Building A, Ground Floor',
-          quantityAvailable: 3,
-          originalPrice: '250.00',
-          discountedPrice: '180.00',
-          imageUrl: null,
-          availableUntil: availableUntil.toISOString(),
-          isActive: true,
-          createdBy: staffUser.id,
-        },
-        {
-          name: 'Chicken Caesar Salad',
-          description: 'Grilled chicken breast with romaine lettuce, parmesan, and caesar dressing',
-          canteenName: 'Student Union Food Court',
-          canteenLocation: 'Building B, 2nd Floor',
-          quantityAvailable: 5,
-          originalPrice: '195.00',
-          discountedPrice: '130.00',
-          imageUrl: null,
-          availableUntil: availableUntil.toISOString(),
-          isActive: true,
-          createdBy: staffUser.id,
-        },
-        {
-          name: 'Vegetarian Wrap',
-          description: 'Mixed vegetables, hummus, and fresh herbs in a whole wheat wrap',
-          canteenName: 'Green Campus Cafe',
-          canteenLocation: 'Library Building, 1st Floor',
-          quantityAvailable: 4,
-          originalPrice: '165.00',
-          discountedPrice: '115.00',
-          imageUrl: null,
-          availableUntil: availableUntil.toISOString(),
-          isActive: true,
-          createdBy: staffUser.id,
-        }
-      ];
-
-      for (const item of demoFoodItems) {
-        await storage.createFoodItem(item);
-      }
-
-      res.json({ success: true, message: 'Demo data seeded successfully' });
+      res.json({ success: true, user: staffUser });
     } catch (error) {
-      console.error("Error seeding demo data:", error);
-      res.status(500).json({ message: "Failed to seed demo data" });
+      console.error('Error approving staff request:', error);
+      res.status(500).json({ message: 'Failed to approve staff request' });
+    }
+  });
+
+  app.put('/api/admin/staff-requests/:id/reject', async (req, res) => {
+    try {
+      let userId = null;
+      
+      if (req.session.user) {
+        userId = req.session.user.claims.sub;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      await storage.updateStaffRequestStatus(id, 'rejected', reason);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error rejecting staff request:', error);
+      res.status(500).json({ message: 'Failed to reject staff request' });
     }
   });
 
   // Auth routes
-  app.get('/api/auth/user', async (req: any, res) => {
+  app.get('/api/auth/user', async (req, res) => {
     try {
       let user = null;
       
-      // Check for demo session first
       if (req.session.user) {
         const userId = req.session.user.claims.sub;
         user = await storage.getUser(userId);
@@ -156,18 +235,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Logout route
-  app.post('/api/auth/logout', (req: any, res) => {
-    // Destroy the session
+  app.post('/api/auth/logout', (req, res) => {
     req.session.destroy((err: any) => {
       if (err) {
         console.error("Error destroying session:", err);
         return res.status(500).json({ message: "Error logging out" });
       }
-      // Clear the session cookie
       res.clearCookie('connect.sid', { path: '/' });
       return res.json({ success: true });
     });
   });
+
 
   // Food items routes
   app.get('/api/food-items', async (req, res) => {

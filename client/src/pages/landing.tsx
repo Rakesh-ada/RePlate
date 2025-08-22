@@ -3,8 +3,10 @@ import { StatsSection } from "@/components/stats-section";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { Search, QrCode, CheckCircle } from "lucide-react";
+import { useLocation } from "wouter";
 
-export default function Landing() {
+function Landing() {
+  const [, setLocation] = useLocation()
   return (
     <div className="min-h-screen bg-surface dark:bg-gray-900">
       <Navbar />
@@ -51,13 +53,12 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
               <Button 
                 className="group relative bg-gradient-to-r from-forest to-forest-dark hover:from-forest-dark hover:to-forest text-white px-10 py-4 text-lg font-semibold rounded-2xl shadow-2xl hover:shadow-forest/25 transition-all duration-300 hover:scale-105 border-0"
-                onClick={async () => {
-                  await fetch('/api/seed-demo-data', { method: 'POST' });
-                  const response = await fetch('/api/demo-login/student');
-                  if (response.ok) {
-                    window.location.reload();
+                onClick={async() => {
+                    console.log("Navigating to student login");
+                     await fetch('/api/auth/logout', { method: 'POST' });
+                    setLocation("/signup");
                   }
-                }}
+                }
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <span className="relative flex items-center">
@@ -68,13 +69,7 @@ export default function Landing() {
               
               <Button 
                 className="group relative bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm border-2 border-forest/30 hover:border-forest text-forest dark:text-forest-light hover:bg-forest/5 dark:hover:bg-forest/10 px-10 py-4 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-                onClick={async () => {
-                  await fetch('/api/seed-demo-data', { method: 'POST' });
-                  const response = await fetch('/api/demo-login/staff');
-                  if (response.ok) {
-                    window.location.reload();
-                  }
-                }}
+                onClick={() => setLocation("/signup")}
               >
                 <span className="relative flex items-center">
                   Staff Login
@@ -204,3 +199,4 @@ export default function Landing() {
     </div>
   );
 }
+export default Landing;

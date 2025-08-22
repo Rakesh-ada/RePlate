@@ -1,4 +1,5 @@
 import { sql, relations } from 'drizzle-orm';
+import { serial } from "drizzle-orm/pg-core";
 import {
   index,
   jsonb,
@@ -13,6 +14,22 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Staff requests table
+export const staffRequests = pgTable("staff_requests", {
+  id: serial("id").primaryKey(),
+  firstName: varchar("first_name", { length: 255 }).notNull(),
+  lastName: varchar("last_name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).unique().notNull(),
+  phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
+  department: varchar("department", { length: 255 }).notNull(),
+  position: varchar("position", { length: 255 }).notNull(),
+  reason: text("reason").notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 // Session storage table (required for Replit Auth)
 export const sessions = pgTable(

@@ -17,6 +17,9 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, sql } from "drizzle-orm";
+import { staffRequests } from "@shared/schema";
+import * as schema from "@shared/schema";
+
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -81,9 +84,89 @@ export interface IStorage {
     partnerCanteens: number;
     totalSavings: number;
   }>;
+  // Staff request operations
+  createStaffRequest(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    department: string;
+    position: string;
+    reason: string;
+    status: string;
+  }): Promise<any>;
+  getStaffRequestByEmail(email: string): Promise<any>;
+  getStaffRequestById(id: string): Promise<any>;
+  getAllStaffRequests(): Promise<any[]>;
+  updateStaffRequestStatus(id: string, status: string, rejectionReason?: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
+  // Staff request operations
+  async createStaffRequest(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    department: string;
+    position: string;
+    reason: string;
+    status: string;
+  }): Promise<any> {
+    const [request] = await db
+      .insert(staffRequests)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return request;
+  }
+
+  async getStaffRequestByEmail(email: string): Promise<any> {
+    const [request] = await db
+      .select()
+      .from(staffRequests)
+      .where(eq(staffRequests.email, email));
+    return request;
+  }
+
+  async getStaffRequestById(id: string): Promise<any> {
+    const [request] = await db
+      .select()
+      .from(staffRequests)
+      .where(eq(staffRequests.id, Number(id)));
+    return request;
+  }
+
+  async getAllStaffRequests(): Promise<any[]> {
+    return await db
+      .select()
+      .from(staffRequests)
+      .orderBy(desc(staffRequests.createdAt));
+  }
+
+  async updateStaffRequestStatus(
+    id: string,
+    status: string,
+    rejectionReason?: string,
+  ): Promise<any> {
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
+    };
+    if (rejectionReason) {
+      updateData.rejectionReason = rejectionReason;
+    }
+    const [request] = await db
+      .update(staffRequests)
+      .set(updateData)
+      .where(eq(staffRequests.id, Number(id)))
+      .returning();
+    return request;
+  }
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

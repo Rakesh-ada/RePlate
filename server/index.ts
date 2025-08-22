@@ -2,29 +2,30 @@ import 'dotenv/config';
 import express, { type Request, Response, NextFunction, RequestHandler } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import session, { Session, SessionData } from 'express-session';
 
-declare module 'express-session' {
-  interface SessionData {
-    user?: {
-      claims: { sub: string };
-      access_token: string;
-      expires_at: number;
-    };
-  }
+// Custom session interface
+interface CustomSession {
+  user?: {
+    claims: { sub: string };
+    access_token: string;
+    expires_at: number;
+  };
+  destroy: (callback: (err?: any) => void) => void;
+  [key: string]: any;
 }
 
 // Extend Express Request type to include session
 declare global {
   namespace Express {
     interface Request {
-      session: Session & Partial<SessionData>;
+      session: CustomSession;
     }
   }
 }
 
 // Simple in-memory session store
 const sessions: Record<string, any> = {};
+
 const app = express();
 
 // Custom session middleware
@@ -33,11 +34,11 @@ const sessionMiddleware: RequestHandler = (req, res, next) => {
   let sessionId = req.headers.cookie?.split('; ')
     .find((row: string) => row.startsWith('connect.sid='))
     ?.split('=')[1];
-
+    
   if (!sessionId) {
     sessionId = Math.random().toString(36).substring(2, 15);
-    res.cookie('connect.sid', sessionId, { 
-      httpOnly: true, 
+    res.cookie('connect.sid', sessionId, {
+      httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
   }
@@ -47,17 +48,38 @@ const sessionMiddleware: RequestHandler = (req, res, next) => {
     sessions[sessionId] = {};
   }
 
-  // Add session to request
-  req.session = sessions[sessionId];
-  
+  // Add session to request with destroy method
+  req.session = {
+    ...sessions[sessionId],
+    destroy: (callback: (err?: any) => void) => {
+      try {
+        delete sessions[sessionId];
+        callback();
+      } catch (error) {
+        callback(error);
+      }
+    }
+  };
+
+  // Save session data back to store
+  const originalSession = req.session;
+  res.on('finish', () => {
+    // Don't save if session was destroyed
+    if (sessions[sessionId]) {
+      const { destroy, ...sessionData } = originalSession;
+      sessions[sessionId] = sessionData;
+    }
+  });
+ 
   // Clean up old sessions (optional)
   const oneDay = 24 * 60 * 60 * 1000;
   Object.keys(sessions).forEach(id => {
-    if (Date.now() - parseInt(id, 36) > oneDay) {
+    const sessionAge = Date.now() - (parseInt(id, 36) * 1000);
+    if (sessionAge > oneDay) {
       delete sessions[id];
     }
   });
-
+  
   next();
 };
 
@@ -83,27 +105,27 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
-
       log(logLine);
     }
   });
-
+  
   next();
 });
 
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  // Fixed error handler - removed invalid asterisks
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
+    
+    console.error('Error occurred:', err);
+    
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -119,7 +141,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
- const port = 3000;
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+  
   server.listen(port, () => {
     log(`serving on port ${port}`);
   });
